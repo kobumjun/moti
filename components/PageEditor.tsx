@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Page } from "@/lib/types";
 
 interface PageEditorProps {
@@ -8,6 +8,7 @@ interface PageEditorProps {
   onSave: (id: string, title: string, content: string) => void;
   onDelete: (id: string) => void;
   onAddSubpage: () => void;
+  onEditorChange?: (title: string, content: string) => void;
 }
 
 export default function PageEditor({
@@ -15,6 +16,7 @@ export default function PageEditor({
   onSave,
   onDelete,
   onAddSubpage,
+  onEditorChange,
 }: PageEditorProps) {
   const [title, setTitle] = useState(page.title);
   const [content, setContent] = useState(page.content);
@@ -26,10 +28,17 @@ export default function PageEditor({
   }, [page.id, page.title, page.content]);
 
   useEffect(() => {
-    const changed =
-      title !== page.title || content !== page.content;
+    const changed = title !== page.title || content !== page.content;
     setHasChanges(changed);
   }, [title, content, page.title, page.content]);
+
+  const reportChange = useCallback(() => {
+    onEditorChange?.(title, content);
+  }, [onEditorChange, title, content]);
+
+  useEffect(() => {
+    reportChange();
+  }, [title, content, reportChange]);
 
   const handleSave = () => {
     if (!hasChanges) return;

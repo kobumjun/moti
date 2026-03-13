@@ -31,17 +31,48 @@ export default function AppContent({ initialPages }: AppContentProps) {
   const [rushMessage, setRushMessage] = useState<string | null>(null);
   const [rushState, setRushState] = useState<CharacterState>("idle");
   const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [currentEditorTitle, setCurrentEditorTitle] = useState("");
+  const [currentEditorContent, setCurrentEditorContent] = useState("");
   const supabase = createClient();
 
   const triggerRush = useCallback(
-    (action: RushAction, state: CharacterState) => {
-      const msg = getRandomResponse(action);
-      setRushMessage(msg);
+    (action: RushAction, state: CharacterState, message?: string) => {
+      setRushMessage(message ?? getRandomResponse(action));
       setRushState(state);
       setTimeout(() => setRushState("idle"), 1500);
-      setTimeout(() => setRushMessage(null), 5000);
+      setTimeout(() => setRushMessage(null), 6000);
     },
     []
+  );
+
+  const triggerRushWithAI = useCallback(
+    async (title: string, content: string, state: CharacterState) => {
+      setRushState(state);
+      setIsLoadingAI(true);
+      try {
+        const res = await fetch("/api/rush", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pageTitle: title,
+            content,
+          }),
+        });
+        const json = await res.json();
+        if (json.comment) {
+          setRushMessage(json.comment);
+          setTimeout(() => setRushState("idle"), 1500);
+          setTimeout(() => setRushMessage(null), 6000);
+        } else {
+          triggerRush("content_save", state);
+        }
+      } catch {
+        triggerRush("content_save", state);
+      } finally {
+        setIsLoadingAI(false);
+      }
+    },
+    [triggerRush]
   );
 
   const refreshPages = useCallback(async () => {
@@ -69,6 +100,18 @@ export default function AppContent({ initialPages }: AppContentProps) {
       }));
     setPages(build(root));
   }, [supabase]);
+
+  const handleEditorChange = useCallback((title: string, content: string) => {
+    setCurrentEditorTitle(title);
+    setCurrentEditorContent(content);
+  }, []);
+
+  useEffect(() => {
+    if (selectedPage) {
+      setCurrentEditorTitle(selectedPage.title);
+      setCurrentEditorContent(selectedPage.content);
+    }
+  }, [selectedPage?.id, selectedPage?.title, selectedPage?.content]);
 
   const handleCreatePage = useCallback(async () => {
     const {
@@ -121,10 +164,15 @@ export default function AppContent({ initialPages }: AppContentProps) {
         .from("pages")
         .update({ title, content, updated_at: new Date().toISOString() })
         .eq("id", id);
-      triggerRush("content_save", "armsCrossed");
+      const hasContent = (title + content).trim().length > 0;
+      if (hasContent) {
+        await triggerRushWithAI(title, content, "armsCrossed");
+      } else {
+        triggerRush("content_save", "armsCrossed");
+      }
       await refreshPages();
     },
-    [supabase, refreshPages, triggerRush]
+    [supabase, refreshPages, triggerRush, triggerRushWithAI]
   );
 
   const handleDeletePage = useCallback(
@@ -140,14 +188,17 @@ export default function AppContent({ initialPages }: AppContentProps) {
 
   const handleAskAI = useCallback(async () => {
     if (!selectedPage) return;
+    const title = currentEditorTitle || selectedPage.title;
+    const content = currentEditorContent ?? selectedPage.content;
     setIsLoadingAI(true);
     try {
       const res = await fetch("/api/rush", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          pageTitle: selectedPage.title,
-          contentPreview: selectedPage.content,
+          pageTitle: title,
+          content,
+          requestAnother: true,
         }),
       });
       const json = await res.json();
@@ -159,7 +210,7 @@ export default function AppContent({ initialPages }: AppContentProps) {
     } finally {
       setIsLoadingAI(false);
     }
-  }, [selectedPage]);
+  }, [selectedPage, currentEditorTitle, currentEditorContent]);
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -177,6 +228,7 @@ export default function AppContent({ initialPages }: AppContentProps) {
             onSave={handleSavePage}
             onDelete={handleDeletePage}
             onAddSubpage={() => handleCreateSubpage(selectedPage.id)}
+            onEditorChange={handleEditorChange}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-moti-textDim">
