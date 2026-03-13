@@ -1,57 +1,25 @@
 /**
- * CharacterEngine - 전체 페이지 로밍
- * UP=engineLift, DOWN=jumpDown
+ * CharacterEngine - 시퀀스 기반 행동
+ * 의미 있는 흐름, 부드러운 이동
  */
 
 import {
-  getRandomPose,
-  getRandomInterval,
-  getEventReaction,
+  FLOWS,
   getZone,
-  getRandomZone,
-  getZoneForArea,
-  needsLiftUp,
-  needsJumpDown,
-} from "./CharacterBrain";
-import { getRandomPhrase, getPhraseFromText } from "./CharacterSpeech";
+  clampToSafe,
+  type ZoneKey,
+  type FlowStep,
+  type PoseState,
+} from "./CharacterAnimations";
+import { getPhrase, getPhraseFromText } from "./CharacterSpeech";
 import {
   subscribeToCharacterEvents,
   setupIdleDetection,
   setupScrollDetection,
 } from "./CharacterEvents";
 import type { CharacterEventDetail } from "./CharacterEvents";
-import { OFFSCREEN_LEFT } from "./CharacterAnimations";
-import type { ZoneKey } from "./CharacterAnimations";
 
-export type MascotState =
-  | "hidden"
-  | "entering"
-  | "roaming"
-  | "idle"
-  | "observing"
-  | "speaking"
-  | "peeking"
-  | "pointing"
-  | "engineLift"
-  | "jumpingDown"
-  | "landing"
-  | "inspecting"
-  | "reactingToText"
-  | "reactingToSave"
-  | "reactingToIdle"
-  | "exiting"
-  | "shrug"
-  | "lookAround"
-  | "armsCrossed"
-  | "letsGo"
-  | "thinking"
-  | "hype"
-  | "frustrated"
-  | "cheering"
-  | "peekSide"
-  | "peekBottom"
-  | "walking"
-  | "running";
+export type MascotState = PoseState;
 
 export interface CharacterState {
   state: MascotState;
@@ -61,22 +29,29 @@ export interface CharacterState {
   speech: string | null;
   visible: boolean;
   showFlame: boolean;
+  /** 이동 애니메이션 지속시간 (ms) → sec for transition */
+  moveDurationMs: number;
 }
 
 export type StateCallback = (s: CharacterState) => void;
 
+const ENTRY_X = -120;
+const WALK_MS_PER_100PX = 85;
+
 export class CharacterEngine {
   private s: CharacterState = {
-    state: "hidden",
-    x: OFFSCREEN_LEFT,
-    y: 480,
+    state: "entering",
+    x: ENTRY_X,
+    y: 600,
     facing: "right",
     speech: null,
     visible: false,
     showFlame: false,
+    moveDurationMs: 1300,
   };
-  private currentZone: ZoneKey = "center";
   private listeners = new Set<StateCallback>();
+  private flowIndex = 0;
+  private stepIndex = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private unsub: (() => void)[] = [];
 
@@ -90,8 +65,7 @@ export class CharacterEngine {
   }
 
   private notify() {
-    const state = this.getState();
-    this.listeners.forEach((cb) => cb(state));
+    this.listeners.forEach((cb) => cb(this.getState()));
   }
 
   private setState(partial: Partial<CharacterState>) {
@@ -99,161 +73,163 @@ export class CharacterEngine {
     this.notify();
   }
 
-  private runEntering(targetZone: ZoneKey) {
-    const t = getZone(targetZone);
-    this.currentZone = targetZone;
+  private getViewport() {
+    if (typeof window === "undefined") return { w: 1280, h: 800 };
+    return { w: window.innerWidth, h: window.innerHeight };
+  }
+
+  private getClampedTarget(zone: ZoneKey) {
+    const { w, h } = this.getViewport();
+    const t = getZone(zone, w, h);
+    return clampToSafe(t.x, t.y, w, h);
+  }
+
+  private travelDuration(from: { x: number; y: number }, to: { x: number; y: number }) {
+    const dist = Math.hypot(to.x - from.x, to.y - from.y);
+    return Math.max(1200, (dist / 100) * WALK_MS_PER_100PX);
+  }
+
+  private runStep(step: FlowStep) {
+    const target = this.getClampedTarget(step.zone);
+    const from = { x: this.s.x, y: this.s.y };
+    const duration = this.travelDuration(from, target);
+
+    const isWalking = step.pose === "walkCycle" || step.pose === "exitWalk" || step.pose === "entering";
+    const goingUp = target.y < from.y - 40;
+
     this.setState({
-      state: "entering",
-      visible: true,
-      x: OFFSCREEN_LEFT,
-      y: 480,
-      facing: "right",
-      speech: null,
-      showFlame: false,
+      facing: target.x > this.s.x ? "right" : "left",
+      state: goingUp && isWalking ? "engineLift" : step.pose,
+      showFlame: goingUp && isWalking,
+      x: target.x,
+      y: target.y,
+      moveDurationMs: duration,
     });
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        this.setState({ x: t.x, y: t.y });
-      });
-    });
-  }
 
-  private moveToZone(targetZone: ZoneKey) {
-    const from = getZone(this.currentZone);
-    const to = getZone(targetZone);
-
-    const goUp = needsLiftUp(from.y, to.y);
-    const goDown = needsJumpDown(from.y, to.y);
-
-    this.setState({ facing: to.x > this.s.x ? "right" : "left" });
-
-    if (goUp) {
-      this.setState({ state: "engineLift", showFlame: true });
+    const speechDuration = step.speechKey ? 2400 : 0;
+    if (step.speechKey) {
       setTimeout(() => {
-        this.setState({ x: to.x, y: to.y, state: "landing", showFlame: false });
-        this.currentZone = targetZone;
-        setTimeout(() => this.setState({ state: "idle" }), 400);
-      }, 1000);
-    } else if (goDown) {
-      this.setState({ state: "jumpingDown" });
-      setTimeout(() => {
-        this.setState({ x: to.x, y: to.y, state: "landing" });
-        this.currentZone = targetZone;
-        setTimeout(() => this.setState({ state: "idle" }), 500);
-      }, 700);
-    } else {
-      this.setState({ state: "walking" });
-      this.setState({ x: to.x, y: to.y });
-      this.currentZone = targetZone;
-      setTimeout(() => this.setState({ state: "idle" }), 900);
-    }
-  }
-
-  private runAction(action: ReturnType<typeof getEventReaction>, detail?: CharacterEventDetail) {
-    const { state, speechContext, targetZone, duration } = action;
-
-    if (state === "entering" && targetZone) {
-      this.runEntering(targetZone);
-      if (speechContext) {
-        setTimeout(() => {
-          this.setState({ speech: getRandomPhrase(speechContext) });
-          setTimeout(() => this.setState({ speech: null }), 2800);
-        }, 1000);
-      }
-      return;
+        this.setState({ speech: getPhrase(step.speechKey as Parameters<typeof getPhrase>[0]) });
+        setTimeout(() => this.setState({ speech: null }), speechDuration);
+      }, duration * 0.3);
     }
 
-    if (state === "reactingToText" && detail?.content) {
-      const phrase = getPhraseFromText(detail.content);
-      if (phrase) {
-        this.setState({ state: "reactingToText", speech: phrase });
-        setTimeout(() => this.setState({ speech: null, state: "idle" }), 2200);
-      }
-      return;
+    if (goingUp && isWalking) {
+      setTimeout(() => this.setState({ showFlame: false }), duration * 0.8);
     }
 
-    const phrase = speechContext ? getRandomPhrase(speechContext) : null;
-    this.setState({ state, speech: phrase ?? null });
+    const poseDuration = step.pose === "walkCycle" || step.pose === "exitWalk" ? duration : step.duration;
 
-    setTimeout(() => {
-      this.setState({ speech: null });
-      if (!["idle", "walking", "engineLift", "jumpingDown", "landing"].includes(state)) {
-        this.setState({ state: "idle" });
-      }
+    this.timer = setTimeout(() => {
+      this.setState({ state: step.pose });
+      this.timer = setTimeout(() => {
+        this.runNextStep();
+      }, poseDuration);
     }, duration);
   }
 
-  private runPose() {
-    const action = getRandomPose();
-    this.setState({
-      state: action.state,
-      speech: action.speechContext ? getRandomPhrase(action.speechContext) : null,
-    });
-    setTimeout(() => {
-      this.setState({ speech: null, state: "idle" });
-    }, action.duration);
+  private runNextStep() {
+    const flow = FLOWS[this.flowIndex]!;
+    const step = flow[this.stepIndex];
+    if (step) {
+      this.runStep(step);
+      this.stepIndex++;
+    } else {
+      this.flowIndex = (this.flowIndex + 1) % FLOWS.length;
+      this.stepIndex = 0;
+      this.timer = setTimeout(() => this.runNextStep(), 2000);
+    }
   }
 
-  private scheduleNext() {
+  private runEntering() {
+    const firstStep = FLOWS[0]![0]!;
+    const target = this.getClampedTarget(firstStep.zone);
+
+    this.setState({
+      visible: true,
+      state: "entering",
+      x: ENTRY_X,
+      y: target.y,
+      facing: "right",
+      speech: null,
+      showFlame: false,
+      moveDurationMs: 1300,
+    });
+
+    const duration = 2200;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.setState({ x: target.x, moveDurationMs: duration });
+      });
+    });
+
+    setTimeout(() => {
+      this.setState({ speech: getPhrase("intro") });
+      setTimeout(() => this.setState({ speech: null }), 2600);
+    }, 1200);
+
     this.timer = setTimeout(() => {
-      const st = this.s.state;
-      const idleLike = ["idle", "lookAround", "shrug", "armsCrossed", "letsGo", "thinking", "peekBottom", "peekSide", "landing"].includes(st);
-      if (idleLike) {
-        if (Math.random() < 0.7) {
-          const next = getRandomZone();
-          if (next !== this.currentZone) this.moveToZone(next);
-          else this.runPose();
-        } else {
-          this.runPose();
-        }
-      }
-      this.scheduleNext();
-    }, getRandomInterval());
+      this.stepIndex = 1; // entering already done
+      this.runNextStep();
+    }, duration);
   }
 
   triggerEvent(detail: CharacterEventDetail) {
-    const action = getEventReaction(detail.type);
-    if (detail.type === "text_change" && (detail.title || detail.content)) {
-      this.runAction(action, detail);
-      return;
-    }
-    if (detail.type === "button_hover") {
-      this.moveToZone("saveArea");
-      this.runAction(action);
+    if (detail.type === "text_change" && detail.content) {
+      const phrase = getPhraseFromText(detail.content);
+      if (phrase) {
+        this.setState({ state: "reactingTyping", speech: phrase });
+        setTimeout(() => this.setState({ speech: null, state: "idleBreathing" }), 2200);
+      }
       return;
     }
     if (detail.type === "save_click") {
-      this.runAction(action);
+      this.setState({ state: "reactingSave", speech: getPhrase("save_click") });
+      setTimeout(() => this.setState({ speech: null }), 2000);
+      return;
+    }
+    if (detail.type === "button_hover") {
+      const t = this.getClampedTarget("saveArea");
+      this.setState({
+        x: t.x,
+        y: t.y,
+        state: "pointingAtButton",
+        speech: getPhrase("button_hover"),
+        facing: "right",
+        moveDurationMs: 1200,
+      });
+      setTimeout(() => this.setState({ speech: null, state: "idleBreathing" }), 1800);
       return;
     }
     if (detail.type === "idle") {
-      this.moveToZone(getZoneForArea("logout"));
-      this.runAction(action);
-      return;
+      const t = this.getClampedTarget("logoutArea");
+      this.setState({
+        x: t.x,
+        y: t.y,
+        state: "reactingLogout",
+        speech: getPhrase("nearLogout"),
+        facing: "left",
+        moveDurationMs: 1800,
+      });
+      setTimeout(() => this.setState({ speech: null, state: "idleBreathing" }), 2800);
     }
-    this.runAction(action);
   }
 
   start() {
-    this.runEntering("center");
-    setTimeout(() => {
-      this.setState({ speech: getRandomPhrase("page_load") });
-      setTimeout(() => this.setState({ speech: null }), 2600);
-    }, 900);
-    setTimeout(() => {
-      this.setState({ state: "idle" });
-      this.scheduleNext();
-    }, 1800);
+    this.flowIndex = 0;
+    this.stepIndex = 0;
+    this.runEntering();
 
     this.unsub.push(
       subscribeToCharacterEvents((d) => this.triggerEvent(d)),
-      setupIdleDetection(() => this.triggerEvent({ type: "idle" }), 25000),
-      setupScrollDetection(() => this.triggerEvent({ type: "scroll" }), 500)
+      setupIdleDetection(() => this.triggerEvent({ type: "idle" }), 30000),
+      setupScrollDetection(() => this.triggerEvent({ type: "scroll" }), 600)
     );
   }
 
   stop() {
     if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
     this.unsub.forEach((f) => f());
   }
 }

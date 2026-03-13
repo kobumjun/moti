@@ -1,72 +1,119 @@
 /**
- * CharacterAnimations - 전체 페이지 로밍 영역
- * 사이드바, 에디터, 상단, 로그아웃, 페이지 리스트 등
+ * CharacterAnimations - 안전 영역 및 시퀀스
  */
 
-export type MascotState =
-  | "hidden"
-  | "entering"
-  | "roaming"
-  | "idle"
-  | "observing"
-  | "speaking"
-  | "peeking"
-  | "pointing"
-  | "engineLift"
-  | "jumpingDown"
-  | "landing"
-  | "inspecting"
-  | "reactingToText"
-  | "reactingToSave"
-  | "reactingToIdle"
-  | "exiting"
-  | "shrug"
+export type PoseState =
+  | "idleBreathing"
+  | "confidentIdle"
   | "lookAround"
-  | "armsCrossed"
-  | "letsGo"
-  | "thinking"
-  | "hype"
-  | "frustrated"
-  | "really"
-  | "cheering"
-  | "crouching"
-  | "dash"
-  | "walking"
-  | "running"
-  | "peekSide"
-  | "peekBottom";
+  | "inspecting"
+  | "nodding"
+  | "smallBounce"
+  | "anticipation"
+  | "pointingUp"
+  | "pointingLeft"
+  | "pointingRight"
+  | "pointingAtButton"
+  | "shrug"
+  | "keepGoing"
+  | "handsOnHips"
+  | "proudPose"
+  | "lookHere"
+  | "peekSneaky"
+  | "cornerPeek"
+  | "arrivingStop"
+  | "stepCycle"
+  | "walkCycle"
+  | "engineLift"
+  | "landing"
+  | "exitWalk"
+  | "pauseWatch"
+  | "reactingTyping"
+  | "reactingIdle"
+  | "reactingLogout"
+  | "reactingSave"
+  | "entering";
 
-export interface Zone {
-  x: number;
-  y: number;
-  label: string;
-  area: "sidebar" | "editor" | "top" | "bottom" | "center" | "logout";
-}
+export const MASCOT_WIDTH = 100;
+export const MASCOT_HEIGHT = 130;
+export const SAFE_PADDING = 70;
 
-// 전체 페이지 로밍 영역 (px)
-export const ZONES: Record<string, Zone> = {
-  sidebarTop: { x: 90, y: 120, label: "sidebarTop", area: "sidebar" },
-  sidebarMid: { x: 90, y: 280, label: "sidebarMid", area: "sidebar" },
-  sidebarBottom: { x: 90, y: 450, label: "sidebarBottom", area: "sidebar" },
-  pageList: { x: 140, y: 220, label: "pageList", area: "sidebar" },
-  editorTop: { x: 420, y: 160, label: "editorTop", area: "editor" },
-  editorCenter: { x: 520, y: 320, label: "editorCenter", area: "editor" },
-  saveArea: { x: 680, y: 140, label: "saveArea", area: "editor" },
-  topRight: { x: 1100, y: 60, label: "topRight", area: "top" },
-  logoutArea: { x: 1050, y: 80, label: "logoutArea", area: "logout" },
-  bottomLeft: { x: 350, y: 480, label: "bottomLeft", area: "bottom" },
-  bottomCenter: { x: 550, y: 480, label: "bottomCenter", area: "bottom" },
-  bottomRight: { x: 750, y: 480, label: "bottomRight", area: "bottom" },
-  center: { x: 550, y: 300, label: "center", area: "center" },
+// 안전 영역 - 1280 기준 좌표 (getZone에서 viewport 보간)
+const ZONES_1280: Record<string, { x: number; y: number }> = {
+  bottomLeft: { x: 140, y: 600 },
+  bottomCenter: { x: 540, y: 600 },
+  bottomRight: { x: 900, y: 600 },
+  sidebarTop: { x: 130, y: 200 },
+  pageList: { x: 150, y: 350 },
+  sidebarBottom: { x: 130, y: 500 },
+  editorTop: { x: 480, y: 200 },
+  editorCenter: { x: 580, y: 350 },
+  saveArea: { x: 780, y: 180 },
+  logoutArea: { x: 1080, y: 100 },
+  center: { x: 580, y: 380 },
 };
 
-export type ZoneKey = "sidebarTop" | "sidebarMid" | "sidebarBottom" | "pageList" | "editorTop" | "editorCenter" | "saveArea" | "topRight" | "logoutArea" | "bottomLeft" | "bottomCenter" | "bottomRight" | "center";
+export type ZoneKey = keyof typeof ZONES_1280;
 
-export const OFFSCREEN_LEFT = -160;
-export const OFFSCREEN_RIGHT = 1200;
-export const OFFSCREEN_TOP = -120;
-export const OFFSCREEN_BOTTOM = 700;
+// 시퀀스 스텝
+export interface FlowStep {
+  zone: ZoneKey;
+  pose: PoseState;
+  speechKey?: string;
+  duration: number;
+}
 
-export const WALK_SPEED = 80;
-export const LIFT_DURATION = 1200;
-export const JUMP_DURATION = 800;
+export const FLOW_A: FlowStep[] = [
+  { zone: "bottomLeft", pose: "entering", speechKey: "intro", duration: 2000 },
+  { zone: "bottomCenter", pose: "walkCycle", duration: 1600 },
+  { zone: "pageList", pose: "arrivingStop", duration: 700 },
+  { zone: "pageList", pose: "inspecting", speechKey: "pageList", duration: 2400 },
+  { zone: "pageList", pose: "pointingAtButton", duration: 1400 },
+  { zone: "editorCenter", pose: "walkCycle", speechKey: "nextZone", duration: 2200 },
+  { zone: "editorCenter", pose: "arrivingStop", duration: 600 },
+  { zone: "editorCenter", pose: "pauseWatch", speechKey: "editor", duration: 2800 },
+  { zone: "saveArea", pose: "walkCycle", speechKey: "toSave", duration: 2000 },
+  { zone: "saveArea", pose: "pointingAtButton", speechKey: "pointSave", duration: 2200 },
+  { zone: "bottomRight", pose: "exitWalk", duration: 1800 },
+];
+
+export const FLOW_B: FlowStep[] = [
+  { zone: "bottomCenter", pose: "cornerPeek", duration: 900 },
+  { zone: "bottomCenter", pose: "peekSneaky", speechKey: "peek", duration: 1400 },
+  { zone: "pageList", pose: "walkCycle", duration: 1800 },
+  { zone: "pageList", pose: "arrivingStop", duration: 600 },
+  { zone: "pageList", pose: "shrug", speechKey: "shrug", duration: 2000 },
+  { zone: "logoutArea", pose: "walkCycle", duration: 2500 },
+  { zone: "logoutArea", pose: "reactingLogout", speechKey: "nearLogout", duration: 3000 },
+  { zone: "bottomCenter", pose: "walkCycle", duration: 2000 },
+  { zone: "bottomCenter", pose: "confidentIdle", duration: 3500 },
+];
+
+export const FLOW_C: FlowStep[] = [
+  { zone: "center", pose: "idleBreathing", speechKey: "flow", duration: 2200 },
+  { zone: "editorTop", pose: "walkCycle", duration: 1700 },
+  { zone: "editorTop", pose: "lookHere", speechKey: "editor", duration: 2300 },
+  { zone: "saveArea", pose: "walkCycle", duration: 1500 },
+  { zone: "saveArea", pose: "keepGoing", speechKey: "keepGoing", duration: 2500 },
+  { zone: "center", pose: "proudPose", duration: 2800 },
+];
+
+export const FLOWS = [FLOW_A, FLOW_B, FLOW_C];
+
+export function getZone(zone: ZoneKey, vw = 1280, vh = 800): { x: number; y: number } {
+  const base = ZONES_1280[zone] ?? ZONES_1280.center;
+  const x = (base!.x / 1280) * vw;
+  const y = (base!.y / 800) * vh;
+  return { x, y };
+}
+
+export function clampToSafe(x: number, y: number, vw: number, vh: number): { x: number; y: number } {
+  const minX = SAFE_PADDING + MASCOT_WIDTH / 2;
+  const maxX = vw - SAFE_PADDING - MASCOT_WIDTH / 2;
+  const minY = SAFE_PADDING + MASCOT_HEIGHT;
+  const maxY = vh - SAFE_PADDING - 30;
+  return {
+    x: Math.max(minX, Math.min(maxX, x)),
+    y: Math.max(minY, Math.min(maxY, y)),
+  };
+}
