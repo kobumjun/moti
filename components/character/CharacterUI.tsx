@@ -1,27 +1,25 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
   CharacterEngine,
   type CharacterState,
   type MascotState,
 } from "./CharacterEngine";
 
-const CHAR_WIDTH = 100;
-const CHAR_HEIGHT = 130;
-const CHAR_ANCHOR = { x: 0.5, y: 1 };
+const CHAR_WIDTH = 72;
+const CHAR_HEIGHT = 110;
 
 export default function CharacterUI() {
   const [state, setState] = useState<CharacterState>({
-    state: "entering",
-    x: -120,
-    y: 480,
+    state: "idle",
+    x: 120,
+    y: 600,
     facing: "right",
     speech: null,
     visible: false,
-    showFlame: false,
-    moveDurationMs: 1300,
+    walkFrame: 0,
   });
   const engineRef = useRef(new CharacterEngine());
 
@@ -36,14 +34,13 @@ export default function CharacterUI() {
 
   if (!state.visible) return null;
 
-  const durationSec = (state.moveDurationMs ?? 1000) / 1000;
-
   return (
     <div
       className="fixed inset-0 pointer-events-none z-40 overflow-visible"
       aria-hidden
     >
-      <motion.div
+      {/* Position updates every frame via engine - NO transition, NO teleport */}
+      <div
         className="absolute flex flex-col items-center"
         style={{
           left: state.x,
@@ -51,223 +48,223 @@ export default function CharacterUI() {
           width: CHAR_WIDTH,
           height: CHAR_HEIGHT,
           transform: `translate(-50%, -100%)`,
-        }}
-        animate={{ left: state.x, top: state.y }}
-        transition={{
-          type: "tween",
-          ease: [0.25, 0.5, 0.35, 1],
-          duration: durationSec,
+          willChange: state.state === "walk" ? "transform" : "auto",
         }}
       >
+        {/* Comic-style speech bubble - always follows character, above */}
         <AnimatePresence>
           {state.speech && (
-            <motion.div
-              initial={{ opacity: 0, y: 4, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 2, scale: 0.98 }}
-              transition={{ duration: 0.15 }}
-              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2"
+            <div
+              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1"
+              style={{ minWidth: 140, maxWidth: 220 }}
             >
               <div
-                className={`min-w-[130px] max-w-[200px] px-3.5 py-2.5 rounded-xl rounded-b-md bg-[#0a0a0e] border-2 border-[#252530] shadow-xl ${
-                  state.facing === "right" ? "rounded-bl-sm" : "rounded-br-sm"
-                }`}
+                className={`
+                  relative px-4 py-2.5 rounded-xl
+                  bg-white border-2 border-slate-800
+                  shadow-[4px_4px_0_0_rgba(15,23,42,0.4)]
+                  ${state.facing === "right" ? "rounded-bl-md" : "rounded-br-md"}
+                `}
               >
-                <p className="text-sm font-medium text-[#e8e8ec] leading-snug">
+                <p className="text-sm font-bold text-slate-900 leading-snug">
                   {state.speech}
                 </p>
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 top-full -mt-px w-0 h-0"
+                  style={{
+                    borderLeft: "8px solid transparent",
+                    borderRight: "8px solid transparent",
+                    borderTop: "10px solid white",
+                    filter: "drop-shadow(0 2px 0 rgb(30 41 59))",
+                  }}
+                />
               </div>
-            </motion.div>
+            </div>
           )}
         </AnimatePresence>
 
-        <motion.div
+        <div
           className="relative w-full h-full"
           style={{
             transform: state.facing === "left" ? "scaleX(-1)" : "scaleX(1)",
           }}
         >
-          <RocketMascot state={state.state} showFlame={state.showFlame} />
-        </motion.div>
-      </motion.div>
+          <SuperheroMascot state={state.state} walkFrame={state.walkFrame} />
+        </div>
+      </div>
     </div>
   );
 }
 
-function RocketMascot({ state, showFlame }: { state: MascotState; showFlame: boolean }) {
-  const isPointing = ["pointingUp", "pointingLeft", "pointingRight", "pointingAtButton", "lookHere"].includes(state);
+function SuperheroMascot({ state, walkFrame }: { state: MascotState; walkFrame: number }) {
+  const isWalk = state === "walk";
+  const isPoint = state === "point";
   const isShrug = state === "shrug";
-  const isArmsHips = state === "handsOnHips";
-  const isKeepGoing = state === "keepGoing";
-  const isProud = state === "proudPose";
-  const isPeek = ["peekSneaky", "cornerPeek"].includes(state);
-  const isLift = state === "engineLift";
-  const isWalking = ["walkCycle", "stepCycle", "exitWalk", "entering"].includes(state);
-  const isIdle = ["idleBreathing", "confidentIdle", "lookAround", "inspecting", "pauseWatch"].includes(state);
-  const isReacting = ["reactingTyping", "reactingIdle", "reactingLogout", "reactingSave"].includes(state);
-  const isArriving = state === "arrivingStop";
-  const isNodding = state === "nodding";
-  const isAnticipation = state === "anticipation";
+  const isPeek = state === "peek";
+  const isTalk = state === "talk";
 
-  const breathing = isIdle && (state === "idleBreathing" || state === "lookAround");
+  const frame = walkFrame % 4;
 
   return (
-    <svg viewBox="0 0 80 120" fill="none" className="w-full h-full drop-shadow-2xl" preserveAspectRatio="xMidYMax meet">
+    <svg
+      viewBox="0 0 72 110"
+      fill="none"
+      className="w-full h-full drop-shadow-xl"
+      preserveAspectRatio="xMidYMax meet"
+    >
       <defs>
-        <linearGradient id="rocket-body" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#0ea5e9" />
-          <stop offset="50%" stopColor="#0284c7" />
-          <stop offset="100%" stopColor="#0369a1" />
+        <linearGradient id="hero-body" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="40%" stopColor="#2563eb" />
+          <stop offset="100%" stopColor="#1d4ed8" />
         </linearGradient>
-        <linearGradient id="rocket-cone" x1="0%" y1="100%" x2="0%" y2="0%">
-          <stop offset="0%" stopColor="#0ea5e9" />
-          <stop offset="100%" stopColor="#38bdf8" />
+        <linearGradient id="hero-body-shadow" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#1e40af" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.6" />
         </linearGradient>
-        <linearGradient id="fin-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#0284c7" />
-          <stop offset="100%" stopColor="#0c4a6e" />
+        <linearGradient id="hero-cape" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#7c3aed" />
+          <stop offset="100%" stopColor="#5b21b6" />
+        </linearGradient>
+        <linearGradient id="hero-mask" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#1e293b" />
+          <stop offset="100%" stopColor="#0f172a" />
+        </linearGradient>
+        <linearGradient id="hero-belt" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#fbbf24" />
+          <stop offset="100%" stopColor="#f59e0b" />
         </linearGradient>
       </defs>
 
-      {/* Fins - clear rocket shape */}
-      <path d="M 22 75 L 15 105 L 28 98 Z" fill="url(#fin-grad)" stroke="#0c4a6e" strokeWidth="1" />
-      <path d="M 58 75 L 65 105 L 52 98 Z" fill="url(#fin-grad)" stroke="#0c4a6e" strokeWidth="1" />
-      <path d="M 32 102 L 40 115 L 48 102 Z" fill="url(#fin-grad)" stroke="#0c4a6e" strokeWidth="1" />
+      {/* Cape - behind body */}
+      <path
+        d="M 18 38 Q 8 55 12 90 L 28 88 L 26 50 Z M 54 38 Q 64 55 60 90 L 44 88 L 46 50 Z"
+        fill="url(#hero-cape)"
+        stroke="#4c1d95"
+        strokeWidth="1.5"
+      />
 
-      {/* Rocket body - cylindrical, not cone */}
-      <rect x="26" y="30" width="28" height="72" rx="4" fill="url(#rocket-body)" stroke="#0369a1" strokeWidth="1.5" />
+      {/* Body - slim superhero torso */}
+      <path
+        d="M 28 32 L 44 32 L 48 75 L 40 78 L 32 78 L 24 75 Z"
+        fill="url(#hero-body)"
+        stroke="#1e40af"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M 30 35 L 42 35 L 45 72 L 36 75 L 27 72 Z"
+        fill="url(#hero-body-shadow)"
+      />
 
-      {/* Nose cone - sleek */}
-      <path d="M 40 8 L 52 30 L 40 32 L 28 30 Z" fill="url(#rocket-cone)" stroke="#0ea5e9" strokeWidth="1" />
+      {/* Belt */}
+      <rect x="26" y="70" width="20" height="6" rx="2" fill="url(#hero-belt)" stroke="#d97706" strokeWidth="1" />
+      <circle cx="36" cy="73" r="2.5" fill="#fef3c7" stroke="#d97706" strokeWidth="0.5" />
 
-      {/* Window / face area */}
-      <motion.ellipse
-        cx="40"
-        cy="48"
-        rx="10"
-        ry="11"
-        fill="#0f172a"
-        stroke="#1e3a5f"
+      {/* Head - with mask */}
+      <ellipse cx="36" cy="22" rx="14" ry="16" fill="#fcd5b0" stroke="#e8a87c" strokeWidth="1" />
+      <path
+        d="M 22 18 Q 36 12 50 18 L 50 26 Q 36 30 22 26 Z"
+        fill="url(#hero-mask)"
+        stroke="#0f172a"
         strokeWidth="1"
-        animate={
-          breathing
-            ? { scale: [1, 1.03, 1] }
-            : state === "lookAround"
-              ? { x: [0, 2, -2, 0] }
-              : {}
-        }
-        transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse" }}
-        style={{ transformOrigin: "40px 48px" }}
       />
-      <ellipse cx="37" cy="46" rx="2" ry="2.5" fill="white" />
-      <ellipse cx="43" cy="46" rx="2" ry="2.5" fill="white" />
-      <circle cx="37.2" cy="46" r="0.8" fill="#0f172a" />
-      <circle cx="43.2" cy="46" r="0.8" fill="#0f172a" />
-      <motion.path
-        d={isProud || isKeepGoing ? "M 35 52 Q 40 56 45 52" : isShrug ? "M 35 51 Q 40 50 45 51" : "M 35 51 Q 40 54 45 51"}
-        stroke="#64748b"
-        strokeWidth="1.2"
-        fill="none"
-        strokeLinecap="round"
-      />
+      <ellipse cx="30" cy="22" rx="3" ry="3.5" fill="white" opacity="0.9" />
+      <ellipse cx="42" cy="22" rx="3" ry="3.5" fill="white" opacity="0.9" />
+      <circle cx="30.5" cy="22" r="1.2" fill="#0f172a" />
+      <circle cx="42.5" cy="22" r="1.2" fill="#0f172a" />
 
-      {/* Flame - UP motion only */}
-      <AnimatePresence>
-        {showFlame && (
-          <motion.g
-            initial={{ opacity: 0, scaleY: 0.5 }}
-            animate={{ opacity: 1, scaleY: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ transformOrigin: "40px 102px" }}
-          >
-            <path d="M 34 100 Q 40 132 46 100" fill="#f59e0b" opacity={0.95} />
-            <path d="M 36 102 Q 40 126 44 102" fill="#fbbf24" opacity={0.9} />
-            <path d="M 38 104 Q 40 118 42 104" fill="#fde68a" opacity={0.85} />
-          </motion.g>
-        )}
-      </AnimatePresence>
-
-      {/* Arms - many poses */}
-      {isPointing ? (
+      {/* Arms */}
+      {isPoint ? (
         <g>
-          <path d="M 26 58 L 14 42" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
-          <path d="M 54 58 L 66 52" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
+          <path d="M 24 48 L 10 32" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 48 48 L 56 58" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
         </g>
       ) : isShrug ? (
         <g>
-          <path d="M 24 54 Q 32 46 40 54" stroke="#0284c7" strokeWidth="4" fill="none" strokeLinecap="round" />
-          <path d="M 56 54 Q 48 46 40 54" stroke="#0284c7" strokeWidth="4" fill="none" strokeLinecap="round" />
-        </g>
-      ) : isArmsHips ? (
-        <g>
-          <path d="M 22 56 L 26 68 L 32 64" stroke="#0284c7" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M 58 56 L 54 68 L 48 64" stroke="#0284c7" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        </g>
-      ) : isKeepGoing ? (
-        <g>
-          <path d="M 26 56 L 22 70" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
-          <path d="M 54 56 L 64 44" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
+          <path d="M 22 46 Q 28 38 36 46" stroke="#2563eb" strokeWidth="5" fill="none" strokeLinecap="round" />
+          <path d="M 50 46 Q 44 38 36 46" stroke="#2563eb" strokeWidth="5" fill="none" strokeLinecap="round" />
         </g>
       ) : isPeek ? (
         <g>
-          <path d="M 24 56 L 18 64" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
-          <path d="M 56 56 L 58 68" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
+          <path d="M 22 48 L 18 60" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 50 48 L 52 62" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
         </g>
-      ) : isWalking ? (
+      ) : isTalk ? (
         <g>
-          <motion.path
-            d="M 26 58 L 22 74"
-            stroke="#0284c7"
-            strokeWidth="4"
-            strokeLinecap="round"
-            animate={{ d: ["M 26 58 L 22 74", "M 26 58 L 26 72", "M 26 58 L 22 74"] }}
-            transition={{ duration: 0.4, repeat: Infinity }}
-          />
-          <motion.path
-            d="M 54 58 L 58 74"
-            stroke="#0284c7"
-            strokeWidth="4"
-            strokeLinecap="round"
-            animate={{ d: ["M 54 58 L 58 74", "M 54 58 L 54 72", "M 54 58 L 58 74"] }}
-            transition={{ duration: 0.4, repeat: Infinity, delay: 0.2 }}
-          />
+          <path d="M 24 48 L 20 62" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 48 48 L 52 58" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
         </g>
-      ) : isArriving || isAnticipation ? (
+      ) : isWalk ? (
         <g>
-          <path d="M 26 56 L 24 70" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
-          <path d="M 54 56 L 56 70" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
+          {frame === 0 && (
+            <>
+              <path d="M 24 50 L 18 66" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 48 50 L 54 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+            </>
+          )}
+          {frame === 1 && (
+            <>
+              <path d="M 24 50 L 26 66" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 48 50 L 50 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+            </>
+          )}
+          {frame === 2 && (
+            <>
+              <path d="M 24 50 L 30 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 48 50 L 42 66" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+            </>
+          )}
+          {frame === 3 && (
+            <>
+              <path d="M 24 50 L 26 66" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 48 50 L 50 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+            </>
+          )}
         </g>
       ) : (
         <g>
-          <path d="M 26 56 L 24 72" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
-          <path d="M 54 56 L 56 72" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
+          <path d="M 24 48 L 22 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 48 48 L 50 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
         </g>
       )}
 
-      {/* Legs - step cycle when walking */}
-      {isWalking ? (
+      {/* Legs - walk cycle sprite */}
+      {isWalk ? (
         <g>
-          <motion.path
-            d="M 32 98 L 30 114"
-            stroke="#0369a1"
-            strokeWidth="4"
-            strokeLinecap="round"
-            animate={{ d: ["M 32 98 L 30 114", "M 32 98 L 34 112", "M 32 98 L 30 114"] }}
-            transition={{ duration: 0.4, repeat: Infinity }}
-          />
-          <motion.path
-            d="M 48 98 L 50 114"
-            stroke="#0369a1"
-            strokeWidth="4"
-            strokeLinecap="round"
-            animate={{ d: ["M 48 98 L 50 114", "M 48 98 L 46 112", "M 48 98 L 50 114"] }}
-            transition={{ duration: 0.4, repeat: Infinity, delay: 0.2 }}
-          />
+          {frame === 0 && (
+            <>
+              <path d="M 30 82 L 26 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 42 82 L 46 106" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+            </>
+          )}
+          {frame === 1 && (
+            <>
+              <path d="M 30 82 L 32 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 42 82 L 42 106" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+            </>
+          )}
+          {frame === 2 && (
+            <>
+              <path d="M 30 82 L 34 106" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 42 82 L 38 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+            </>
+          )}
+          {frame === 3 && (
+            <>
+              <path d="M 30 82 L 32 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 42 82 L 42 106" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+            </>
+          )}
+        </g>
+      ) : isPeek ? (
+        <g>
+          <path d="M 30 82 L 28 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 42 82 L 44 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
         </g>
       ) : (
         <g>
-          <path d="M 32 98 L 32 114" stroke="#0369a1" strokeWidth="4" strokeLinecap="round" />
-          <path d="M 48 98 L 48 114" stroke="#0369a1" strokeWidth="4" strokeLinecap="round" />
+          <path d="M 30 82 L 30 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 42 82 L 42 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
         </g>
       )}
     </svg>
