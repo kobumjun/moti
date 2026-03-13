@@ -10,6 +10,7 @@ import {
   getRandomResponse,
   type RushAction,
 } from "@/lib/rush-responses";
+import { useLanguage } from "@/context/LanguageContext";
 
 type PageWithChildren = Page & { children: PageWithChildren[] };
 
@@ -26,6 +27,7 @@ type CharacterState =
   | "talk";
 
 export default function AppContent({ initialPages }: AppContentProps) {
+  const { t } = useLanguage();
   const [pages, setPages] = useState<PageWithChildren[]>(initialPages);
   const [selectedPage, setSelectedPage] = useState<Page | null>(null);
   const [rushMessage, setRushMessage] = useState<string | null>(null);
@@ -177,13 +179,13 @@ export default function AppContent({ initialPages }: AppContentProps) {
 
   const handleDeletePage = useCallback(
     async (id: string) => {
-      if (!confirm("이 페이지를 삭제할까요?")) return;
+      if (!confirm(t("deleteConfirm"))) return;
       await supabase.from("pages").delete().eq("id", id);
       triggerRush("delete", "walk");
       await refreshPages();
       if (selectedPage?.id === id) setSelectedPage(null);
     },
-    [supabase, refreshPages, triggerRush, selectedPage]
+    [supabase, refreshPages, triggerRush, selectedPage, t]
   );
 
   const handleAskAI = useCallback(async () => {
@@ -232,12 +234,12 @@ export default function AppContent({ initialPages }: AppContentProps) {
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-moti-textDim">
-            <p className="mb-4">페이지를 선택하거나 새로 만들어 보세요.</p>
+            <p className="mb-4">{t("emptyStateMessage")}</p>
             <button
               onClick={handleCreatePage}
               className="px-4 py-2 rounded-lg bg-moti-accent text-white hover:bg-moti-accentDim"
             >
-              새 페이지
+              {t("newPage")}
             </button>
           </div>
         )}

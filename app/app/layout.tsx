@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AppShell from "@/components/AppShell";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 export default async function AppLayout({
   children,
@@ -23,15 +24,17 @@ export default async function AppLayout({
     .single();
 
   return (
-    <AppShell
-      user={{
-        id: user.id,
-        email: user.email ?? "",
-        name: profile?.name ?? null,
-        avatarUrl: profile?.avatar_url ?? null,
-      }}
-    >
-      {children}
-    </AppShell>
+    <LanguageProvider>
+      <AppShell
+        user={{
+          id: user.id,
+          email: user.email ?? "",
+          name: profile?.name ?? null,
+          avatarUrl: profile?.avatar_url ?? null,
+        }}
+      >
+        {children}
+      </AppShell>
+    </LanguageProvider>
   );
 }

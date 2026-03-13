@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
 
 type CharacterState =
   | "idle"
@@ -27,6 +28,8 @@ export default function RushCharacter({
   onAskAI,
   isLoadingAI = false,
 }: RushCharacterProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="fixed bottom-6 right-6 flex items-end gap-3 z-50">
       {/* Speech bubble - fade-in, subtle scale on appear */}
@@ -55,7 +58,7 @@ export default function RushCharacter({
                 disabled={isLoadingAI}
                 className="mt-2 text-xs text-moti-accent hover:underline disabled:opacity-50"
               >
-                {isLoadingAI ? "생각 중..." : "RUSH에게 한마디 더 듣기"}
+                {isLoadingAI ? t("thinking") : t("oneMoreLine")}
               </button>
             )}
           </motion.div>

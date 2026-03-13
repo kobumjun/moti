@@ -1,6 +1,7 @@
 "use client";
 
 import type { Page } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 type PageWithChildren = Page & { children: PageWithChildren[] };
 
@@ -19,6 +20,8 @@ export default function Sidebar({
   onCreatePage,
   onCreateSubpage,
 }: SidebarProps) {
+  const { t } = useLanguage();
+
   return (
     <aside className="w-64 border-r border-moti-border bg-moti-surface flex flex-col overflow-hidden">
       <div className="p-4 border-b border-moti-border">
@@ -26,7 +29,7 @@ export default function Sidebar({
           onClick={onCreatePage}
           className="w-full py-2 px-3 rounded-lg bg-moti-accent text-white text-sm font-medium hover:bg-moti-accentDim transition-colors"
         >
-          + 새 페이지
+          {t("newPage")}
         </button>
       </div>
       <nav className="flex-1 overflow-auto p-2">
@@ -55,6 +58,8 @@ function PageTree({
   onCreateSubpage: (parentId: string) => void;
   level: number;
 }) {
+  const { t } = useLanguage();
+
   return (
     <ul className="space-y-0.5">
       {pages.map((page) => (
@@ -77,7 +82,7 @@ function PageTree({
                 onCreateSubpage(page.id);
               }}
               className="opacity-0 group-hover:opacity-100 p-0.5 text-moti-textDim hover:text-moti-accent text-xs"
-              title="하위 페이지 추가"
+              title={t("addSubpage")}
             >
               +
             </button>

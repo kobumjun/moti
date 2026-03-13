@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { Page } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface PageEditorProps {
   page: Page;
@@ -18,6 +19,7 @@ export default function PageEditor({
   onAddSubpage,
   onEditorChange,
 }: PageEditorProps) {
+  const { t } = useLanguage();
   const [title, setTitle] = useState(page.title);
   const [content, setContent] = useState(page.content);
   const [hasChanges, setHasChanges] = useState(false);
@@ -53,7 +55,7 @@ export default function PageEditor({
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="제목"
+          placeholder={t("titlePlaceholder")}
           className="flex-1 text-2xl font-semibold bg-transparent border-none outline-none text-moti-text placeholder:text-moti-textDim"
         />
         <div className="flex gap-2">
@@ -62,19 +64,19 @@ export default function PageEditor({
             disabled={!hasChanges}
             className="px-4 py-2 rounded-lg bg-moti-accent text-white text-sm font-medium hover:bg-moti-accentDim disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            저장
+            {t("save")}
           </button>
           <button
             onClick={onAddSubpage}
             className="px-4 py-2 rounded-lg border border-moti-border text-moti-textDim hover:text-moti-text text-sm"
           >
-            하위 페이지
+            {t("subPage")}
           </button>
           <button
             onClick={() => onDelete(page.id)}
             className="px-4 py-2 rounded-lg border border-red-500/50 text-red-400 hover:bg-red-500/10 text-sm"
           >
-            삭제
+            {t("delete")}
           </button>
         </div>
       </div>
@@ -82,7 +84,7 @@ export default function PageEditor({
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="내용을 입력하세요..."
+        placeholder={t("contentPlaceholder")}
         className="w-full min-h-[400px] p-4 rounded-xl bg-moti-surface border border-moti-border resize-y outline-none focus:ring-2 focus:ring-moti-accent/50 text-moti-text placeholder:text-moti-textDim leading-relaxed"
       />
     </div>
