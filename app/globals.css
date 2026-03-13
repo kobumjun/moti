@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --moti-bg: #0a0a0f;
+  --moti-surface: #14141c;
+  --moti-accent: #6366f1;
+  --moti-text: #e4e4e7;
+}
+
+body {
+  background: var(--moti-bg);
+  color: var(--moti-text);
+}
