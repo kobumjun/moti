@@ -1,109 +1,173 @@
 /**
- * CharacterEngine - 상태 기반 오케스트레이션
- * 지속적 움직임, 자주 전환
+ * CharacterEngine - 전체 페이지 로밍
+ * UP=engineLift, DOWN=jumpDown
  */
 
 import {
-  getNextPoseBehavior,
+  getRandomPose,
   getRandomInterval,
   getEventReaction,
-  getZonePx,
-  getAdjacentZone,
+  getZone,
+  getRandomZone,
+  getZoneForArea,
+  needsLiftUp,
+  needsJumpDown,
 } from "./CharacterBrain";
-import { getRandomPhrase } from "./CharacterSpeech";
+import { getRandomPhrase, getPhraseFromText } from "./CharacterSpeech";
 import {
   subscribeToCharacterEvents,
   setupIdleDetection,
   setupScrollDetection,
 } from "./CharacterEvents";
-import type { CharacterEventType } from "./CharacterEvents";
-import { OFFSCREEN_LEFT, WALK_SPEED } from "./CharacterAnimations";
-import type { Zone } from "./CharacterAnimations";
+import type { CharacterEventDetail } from "./CharacterEvents";
+import { OFFSCREEN_LEFT } from "./CharacterAnimations";
+import type { ZoneKey } from "./CharacterAnimations";
 
 export type MascotState =
   | "hidden"
   | "entering"
-  | "walking"
+  | "roaming"
   | "idle"
-  | "pointing"
-  | "peeking"
+  | "observing"
   | "speaking"
-  | "posing"
+  | "peeking"
+  | "pointing"
+  | "engineLift"
+  | "jumpingDown"
+  | "landing"
+  | "inspecting"
+  | "reactingToText"
+  | "reactingToSave"
+  | "reactingToIdle"
   | "exiting"
   | "shrug"
   | "lookAround"
   | "armsCrossed"
   | "letsGo"
-  | "thinking";
+  | "thinking"
+  | "hype"
+  | "frustrated"
+  | "cheering"
+  | "peekSide"
+  | "peekBottom"
+  | "walking"
+  | "running";
 
 export interface CharacterState {
   state: MascotState;
   x: number;
+  y: number;
   facing: "left" | "right";
   speech: string | null;
   visible: boolean;
+  showFlame: boolean;
 }
 
 export type StateCallback = (s: CharacterState) => void;
 
 export class CharacterEngine {
-  private charState: CharacterState = {
+  private s: CharacterState = {
     state: "hidden",
     x: OFFSCREEN_LEFT,
+    y: 480,
     facing: "right",
     speech: null,
     visible: false,
+    showFlame: false,
   };
-  private currentZone: Zone = "center";
+  private currentZone: ZoneKey = "center";
   private listeners = new Set<StateCallback>();
-  private randomTimer: ReturnType<typeof setTimeout> | null = null;
-  private unsubEvent: (() => void) | null = null;
-  private unsubIdle: (() => void) | null = null;
-  private unsubScroll: (() => void) | null = null;
+  private timer: ReturnType<typeof setTimeout> | null = null;
+  private unsub: (() => void)[] = [];
 
-  getState(): CharacterState {
-    return { ...this.charState };
+  getState() {
+    return { ...this.s };
   }
 
-  subscribe(cb: StateCallback): () => void {
+  subscribe(cb: StateCallback) {
     this.listeners.add(cb);
     return () => this.listeners.delete(cb);
   }
 
-  private notify(): void {
-    this.listeners.forEach((cb) => cb(this.getState()));
+  private notify() {
+    const state = this.getState();
+    this.listeners.forEach((cb) => cb(state));
   }
 
-  private setState(partial: Partial<CharacterState>): void {
-    this.charState = { ...this.charState, ...partial };
+  private setState(partial: Partial<CharacterState>) {
+    this.s = { ...this.s, ...partial };
     this.notify();
   }
 
-  private runEntering(targetZone: Zone): void {
-    const targetX = getZonePx(targetZone);
+  private runEntering(targetZone: ZoneKey) {
+    const t = getZone(targetZone);
     this.currentZone = targetZone;
     this.setState({
       state: "entering",
       visible: true,
       x: OFFSCREEN_LEFT,
+      y: 480,
       facing: "right",
       speech: null,
+      showFlame: false,
     });
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => this.setState({ x: targetX }));
+      requestAnimationFrame(() => {
+        this.setState({ x: t.x, y: t.y });
+      });
     });
   }
 
-  private runAction(action: ReturnType<typeof getEventReaction>): void {
+  private moveToZone(targetZone: ZoneKey) {
+    const from = getZone(this.currentZone);
+    const to = getZone(targetZone);
+
+    const goUp = needsLiftUp(from.y, to.y);
+    const goDown = needsJumpDown(from.y, to.y);
+
+    this.setState({ facing: to.x > this.s.x ? "right" : "left" });
+
+    if (goUp) {
+      this.setState({ state: "engineLift", showFlame: true });
+      setTimeout(() => {
+        this.setState({ x: to.x, y: to.y, state: "landing", showFlame: false });
+        this.currentZone = targetZone;
+        setTimeout(() => this.setState({ state: "idle" }), 400);
+      }, 1000);
+    } else if (goDown) {
+      this.setState({ state: "jumpingDown" });
+      setTimeout(() => {
+        this.setState({ x: to.x, y: to.y, state: "landing" });
+        this.currentZone = targetZone;
+        setTimeout(() => this.setState({ state: "idle" }), 500);
+      }, 700);
+    } else {
+      this.setState({ state: "walking" });
+      this.setState({ x: to.x, y: to.y });
+      this.currentZone = targetZone;
+      setTimeout(() => this.setState({ state: "idle" }), 900);
+    }
+  }
+
+  private runAction(action: ReturnType<typeof getEventReaction>, detail?: CharacterEventDetail) {
     const { state, speechContext, targetZone, duration } = action;
 
     if (state === "entering" && targetZone) {
       this.runEntering(targetZone);
       if (speechContext) {
         setTimeout(() => {
-          this.setState({ speech: getRandomPhrase(speechContext!) });
-          setTimeout(() => this.setState({ speech: null }), 3000);
-        }, 1100);
+          this.setState({ speech: getRandomPhrase(speechContext) });
+          setTimeout(() => this.setState({ speech: null }), 2800);
+        }, 1000);
+      }
+      return;
+    }
+
+    if (state === "reactingToText" && detail?.content) {
+      const phrase = getPhraseFromText(detail.content);
+      if (phrase) {
+        this.setState({ state: "reactingToText", speech: phrase });
+        setTimeout(() => this.setState({ speech: null, state: "idle" }), 2200);
       }
       return;
     }
@@ -113,14 +177,14 @@ export class CharacterEngine {
 
     setTimeout(() => {
       this.setState({ speech: null });
-      if (!["idle", "walking", "entering"].includes(state)) {
+      if (!["idle", "walking", "engineLift", "jumpingDown", "landing"].includes(state)) {
         this.setState({ state: "idle" });
       }
     }, duration);
   }
 
-  private runPoseBehavior(): void {
-    const action = getNextPoseBehavior();
+  private runPose() {
+    const action = getRandomPose();
     this.setState({
       state: action.state,
       speech: action.speechContext ? getRandomPhrase(action.speechContext) : null,
@@ -130,64 +194,66 @@ export class CharacterEngine {
     }, action.duration);
   }
 
-  private walkToZone(nextZone: Zone): void {
-    const targetX = getZonePx(nextZone);
-    const dist = Math.abs(targetX - this.charState.x);
-    const duration = Math.max(1200, (dist / 100) * WALK_SPEED);
-    this.currentZone = nextZone;
-    this.setState({
-      state: "walking",
-      facing: targetX > this.charState.x ? "right" : "left",
-      speech: null,
-    });
-    this.setState({ x: targetX });
-    setTimeout(() => {
-      this.setState({ state: "idle" });
-    }, duration);
-  }
-
-  triggerEvent(type: CharacterEventType): void {
-    const action = getEventReaction(type);
-    this.runAction(action);
-  }
-
-  private scheduleNext(): void {
-    this.randomTimer = setTimeout(() => {
-      const s = this.charState.state;
-      if (s === "idle" || s === "lookAround" || s === "shrug" || s === "armsCrossed" || s === "letsGo" || s === "thinking" || s === "peeking") {
-        if (Math.random() < 0.6) {
-          this.walkToZone(getAdjacentZone(this.currentZone));
+  private scheduleNext() {
+    this.timer = setTimeout(() => {
+      const st = this.s.state;
+      const idleLike = ["idle", "lookAround", "shrug", "armsCrossed", "letsGo", "thinking", "peekBottom", "peekSide", "landing"].includes(st);
+      if (idleLike) {
+        if (Math.random() < 0.7) {
+          const next = getRandomZone();
+          if (next !== this.currentZone) this.moveToZone(next);
+          else this.runPose();
         } else {
-          this.runPoseBehavior();
+          this.runPose();
         }
       }
       this.scheduleNext();
     }, getRandomInterval());
   }
 
-  start(): void {
-    this.runEntering("center");
-    if (this.charState.visible) {
-      setTimeout(() => {
-        this.setState({ speech: getRandomPhrase("page_load") });
-        setTimeout(() => this.setState({ speech: null }), 2800);
-      }, 1000);
+  triggerEvent(detail: CharacterEventDetail) {
+    const action = getEventReaction(detail.type);
+    if (detail.type === "text_change" && (detail.title || detail.content)) {
+      this.runAction(action, detail);
+      return;
     }
-    setTimeout(() => {
-      this.setState({ state: "idle", speech: null });
-      this.scheduleNext();
-    }, 1700);
-
-    this.unsubEvent = subscribeToCharacterEvents((type) => this.triggerEvent(type));
-    this.unsubIdle = setupIdleDetection(() => this.triggerEvent("idle"), 28000);
-    this.unsubScroll = setupScrollDetection(() => this.triggerEvent("scroll"), 600);
+    if (detail.type === "button_hover") {
+      this.moveToZone("saveArea");
+      this.runAction(action);
+      return;
+    }
+    if (detail.type === "save_click") {
+      this.runAction(action);
+      return;
+    }
+    if (detail.type === "idle") {
+      this.moveToZone(getZoneForArea("logout"));
+      this.runAction(action);
+      return;
+    }
+    this.runAction(action);
   }
 
-  stop(): void {
-    if (this.randomTimer) clearTimeout(this.randomTimer);
-    this.randomTimer = null;
-    this.unsubEvent?.();
-    this.unsubIdle?.();
-    this.unsubScroll?.();
+  start() {
+    this.runEntering("center");
+    setTimeout(() => {
+      this.setState({ speech: getRandomPhrase("page_load") });
+      setTimeout(() => this.setState({ speech: null }), 2600);
+    }, 900);
+    setTimeout(() => {
+      this.setState({ state: "idle" });
+      this.scheduleNext();
+    }, 1800);
+
+    this.unsub.push(
+      subscribeToCharacterEvents((d) => this.triggerEvent(d)),
+      setupIdleDetection(() => this.triggerEvent({ type: "idle" }), 25000),
+      setupScrollDetection(() => this.triggerEvent({ type: "scroll" }), 500)
+    );
+  }
+
+  stop() {
+    if (this.timer) clearTimeout(this.timer);
+    this.unsub.forEach((f) => f());
   }
 }

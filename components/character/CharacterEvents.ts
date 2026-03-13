@@ -1,6 +1,6 @@
 /**
- * CharacterEvents - 앱 이벤트 수신 및 dispatch
- * CustomEvent 기반으로 앱과 캐릭터 분리
+ * CharacterEvents - 앱 이벤트
+ * CustomEvent 기반
  */
 
 export type CharacterEventType =
@@ -10,62 +10,68 @@ export type CharacterEventType =
   | "save_click"
   | "button_hover"
   | "idle"
-  | "scroll";
+  | "scroll"
+  | "text_change";
+
+export interface CharacterEventDetail {
+  type: CharacterEventType;
+  title?: string;
+  content?: string;
+}
 
 const EVENT_NAME = "character:event";
 
-export function dispatchCharacterEvent(type: CharacterEventType): void {
+export function dispatchCharacterEvent(
+  type: CharacterEventType,
+  extra?: { title?: string; content?: string }
+): void {
   if (typeof window === "undefined") return;
   window.dispatchEvent(
-    new CustomEvent(EVENT_NAME, { detail: { type } })
+    new CustomEvent(EVENT_NAME, {
+      detail: { type, ...(extra ?? {}) } as CharacterEventDetail,
+    })
   );
 }
 
 export function subscribeToCharacterEvents(
-  callback: (type: CharacterEventType) => void
+  callback: (detail: CharacterEventDetail) => void
 ): () => void {
   if (typeof window === "undefined") return () => {};
   const handler = (e: Event) => {
-    const ev = e as CustomEvent<{ type: CharacterEventType }>;
-    if (ev.detail?.type) callback(ev.detail.type);
+    const ev = e as CustomEvent<CharacterEventDetail>;
+    if (ev.detail?.type) callback(ev.detail);
   };
   window.addEventListener(EVENT_NAME, handler);
   return () => window.removeEventListener(EVENT_NAME, handler);
 }
 
-// Idle detection
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
-const IDLE_THRESHOLD = 30000;
 
 export function setupIdleDetection(
   onIdle: () => void,
-  threshold = IDLE_THRESHOLD
+  threshold = 28000
 ): () => void {
   if (typeof window === "undefined") return () => {};
-
   const resetTimer = () => {
     if (idleTimer) clearTimeout(idleTimer);
     idleTimer = setTimeout(onIdle, threshold);
   };
-
   const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
   events.forEach((e) => window.addEventListener(e, resetTimer));
   resetTimer();
-
   return () => {
     if (idleTimer) clearTimeout(idleTimer);
     events.forEach((e) => window.removeEventListener(e, resetTimer));
   };
 }
 
-// Scroll detection (throttled)
 let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+
 export function setupScrollDetection(
   onScroll: () => void,
   throttleMs = 500
 ): () => void {
   if (typeof window === "undefined") return () => {};
-
   const handler = () => {
     if (scrollTimeout) return;
     scrollTimeout = setTimeout(() => {
@@ -73,7 +79,6 @@ export function setupScrollDetection(
       scrollTimeout = null;
     }, throttleMs);
   };
-
   window.addEventListener("scroll", handler, { passive: true });
   return () => {
     window.removeEventListener("scroll", handler);

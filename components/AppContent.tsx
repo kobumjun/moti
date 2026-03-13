@@ -54,6 +54,19 @@ export default function AppContent({ initialPages }: AppContentProps) {
   }, []);
 
   useEffect(() => {
+    const t = setTimeout(() => {
+      const text = `${currentEditorTitle} ${currentEditorContent}`.trim();
+      if (text.length >= 3) {
+        dispatchCharacterEvent("text_change", {
+          title: currentEditorTitle,
+          content: currentEditorContent,
+        });
+      }
+    }, 800);
+    return () => clearTimeout(t);
+  }, [currentEditorTitle, currentEditorContent]);
+
+  useEffect(() => {
     if (selectedPage) {
       setCurrentEditorTitle(selectedPage.title);
       setCurrentEditorContent(selectedPage.content);
