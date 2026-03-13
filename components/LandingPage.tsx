@@ -16,38 +16,36 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-moti-bg flex flex-col">
-      {/* 상단 바 - 로그인 버튼 우측 상단 */}
       <header className="flex justify-end items-center p-6 border-b border-moti-border/50">
         <button
           onClick={handleGoogleLogin}
           className="px-5 py-2.5 rounded-lg bg-white text-moti-bg font-medium hover:bg-gray-100 transition-colors flex items-center gap-2"
         >
           <GoogleIcon />
-          Google 로그인
+          Sign in with Google
         </button>
       </header>
 
-      {/* 메인 콘텐츠 */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
         <h1 className="text-4xl md:text-5xl font-bold text-moti-text mb-4 text-center">
           MOTI
         </h1>
         <p className="text-lg text-moti-textDim mb-12 text-center max-w-xl">
-          노션처럼 기록하고, AI 캐릭터와 함께 밀어붙이는 메모 툴
+          A momentum-driven memo tool powered by an AI character.
         </p>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-3xl w-full">
           <FeatureCard
-            title="페이지 & 하위 페이지"
-            desc="노션처럼 계층 구조로 메모를 정리하세요."
+            title="Pages & Subpages"
+            desc="Organize memos in a hierarchical structure."
           />
           <FeatureCard
-            title="실시간 AI 반응"
-            desc="RUSH 캐릭터가 당신의 액션에 애니메이션으로 반응합니다."
+            title="Real-time AI reactions"
+            desc="The RUSH character reacts to your actions with animations."
           />
           <FeatureCard
-            title="동기부여 & momentum"
-            desc="기록하는 습관이 작은 로그를 큰 결과로 만듭니다."
+            title="Motivation & momentum"
+            desc="The habit of logging turns small entries into big results."
           />
         </div>
 
@@ -56,7 +54,7 @@ export default function LandingPage() {
           className="mt-12 px-8 py-3 rounded-xl bg-moti-accent text-white font-medium hover:bg-moti-accentDim transition-colors flex items-center gap-2"
         >
           <GoogleIcon />
-          Google로 시작하기
+          Start with Google
         </button>
       </main>
     </div>
