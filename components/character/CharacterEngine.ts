@@ -1,10 +1,15 @@
 /**
- * CharacterEngine - 캐릭터 오케스트레이션
- * Brain, Animations, Speech, Events 통합
- * requestAnimationFrame 기반 경량 상태 관리
+ * CharacterEngine - 상태 기반 캐릭터 오케스트레이션
+ * 자연스러운 수평 이동만, 텔레포트 없음
  */
 
-import { getRandomBehavior, getNextRandomInterval, getEventReaction } from "./CharacterBrain";
+import {
+  getNextIdleBehavior,
+  getRandomInterval,
+  getEventReaction,
+  getZonePx,
+  getAdjacentZone,
+} from "./CharacterBrain";
 import { getRandomPhrase } from "./CharacterSpeech";
 import {
   subscribeToCharacterEvents,
@@ -12,38 +17,48 @@ import {
   setupScrollDetection,
 } from "./CharacterEvents";
 import type { CharacterEventType } from "./CharacterEvents";
+import { OFFSCREEN_LEFT, OFFSCREEN_RIGHT, WALK_SPEED } from "./CharacterAnimations";
+import type { Zone } from "./CharacterAnimations";
 
+export type MascotState =
+  | "hidden"
+  | "entering"
+  | "idle"
+  | "peeking"
+  | "pointing"
+  | "speaking"
+  | "moving"
+  | "exiting"
+  | "shrug"
+  | "lookAround";
 
 export interface CharacterState {
+  state: MascotState;
   x: number;
-  y: number;
-  animation: string;
+  facing: "left" | "right";
   speech: string | null;
   visible: boolean;
-  scale: number;
 }
 
-export type StateCallback = (state: CharacterState) => void;
-
-const INITIAL_STATE: CharacterState = {
-  x: 85,
-  y: 85,
-  animation: "idle",
-  speech: null,
-  visible: true,
-  scale: 1,
-};
+export type StateCallback = (s: CharacterState) => void;
 
 export class CharacterEngine {
-  private state: CharacterState = { ...INITIAL_STATE };
-  private listeners: Set<StateCallback> = new Set();
+  private charState: CharacterState = {
+    state: "hidden",
+    x: OFFSCREEN_LEFT,
+    facing: "right",
+    speech: null,
+    visible: false,
+  };
+  private currentZone: Zone = "left";
+  private listeners = new Set<StateCallback>();
   private randomTimer: ReturnType<typeof setTimeout> | null = null;
   private unsubEvent: (() => void) | null = null;
   private unsubIdle: (() => void) | null = null;
   private unsubScroll: (() => void) | null = null;
 
   getState(): CharacterState {
-    return { ...this.state };
+    return { ...this.charState };
   }
 
   subscribe(cb: StateCallback): () => void {
@@ -57,72 +72,119 @@ export class CharacterEngine {
   }
 
   private setState(partial: Partial<CharacterState>): void {
-    this.state = { ...this.state, ...partial };
+    this.charState = { ...this.charState, ...partial };
     this.notify();
   }
 
-  private runBehavior(behavior: ReturnType<typeof getRandomBehavior>): void {
-    const { animation, speechContext, duration, targetX, targetY } = behavior;
-    const phrase = getRandomPhrase(speechContext);
+  private walkTo(targetX: number, duration: number): void {
+    this.setState({ state: "moving" });
+    this.setState({ x: targetX });
+  }
+
+  private runEntering(targetZone: Zone): void {
+    const targetX = getZonePx(targetZone);
+    this.currentZone = targetZone;
+    this.setState({
+      state: "entering",
+      visible: true,
+      x: OFFSCREEN_LEFT,
+      facing: "right",
+      speech: null,
+    });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.setState({ x: targetX });
+      });
+    });
+  }
+
+  private runAction(action: ReturnType<typeof getEventReaction>): void {
+    const { state, speechContext, targetZone, duration } = action;
+    const phrase = speechContext ? getRandomPhrase(speechContext) : null;
+
+    if (state === "entering" && targetZone) {
+      this.runEntering(targetZone);
+      return;
+    }
 
     this.setState({
-      animation,
-      speech: phrase,
-      visible: animation !== "disappear",
+      state,
+      speech: phrase ?? this.charState.speech,
     });
-
-    if (targetX != null && targetY != null) {
-      this.setState({ x: targetX, y: targetY });
-    }
 
     setTimeout(() => {
       this.setState({ speech: null });
-      if (animation === "disappear") {
-        setTimeout(() => {
-          this.setState({
-            visible: true,
-            x: 15 + Math.random() * 70,
-            y: 15 + Math.random() * 70,
-            animation: "idle",
-          });
-        }, 600);
-      } else {
-        this.setState({ animation: "idle" });
+      if (state !== "idle" && state !== "moving" && state !== "entering") {
+        this.setState({ state: "idle" });
       }
     }, duration);
   }
 
-  triggerEvent(eventType: CharacterEventType): void {
-    const behavior = getEventReaction(eventType);
-    this.runBehavior(behavior);
+  private runIdleBehavior(): void {
+    const action = getNextIdleBehavior();
+    this.setState({
+      state: action.state,
+      speech: action.speechContext ? getRandomPhrase(action.speechContext) : null,
+    });
+    setTimeout(() => {
+      this.setState({ speech: null, state: "idle" });
+    }, action.duration);
+  }
+
+  private maybeWalkToNewZone(): void {
+    const nextZone = getAdjacentZone(this.currentZone);
+    const targetX = getZonePx(nextZone);
+    const dist = Math.abs(targetX - this.charState.x);
+    const duration = Math.max(1000, (dist / 100) * WALK_SPEED);
+    this.currentZone = nextZone;
+    this.setState({ facing: targetX > this.charState.x ? "right" : "left" });
+    this.walkTo(targetX, duration);
+    setTimeout(() => this.setState({ state: "idle" }), duration);
+  }
+
+  triggerEvent(type: CharacterEventType): void {
+    const action = getEventReaction(type);
+    if (action.state === "entering") {
+      this.runEntering(action.targetZone ?? "right");
+      if (action.speechContext) {
+        setTimeout(() => {
+          this.setState({ speech: getRandomPhrase(action.speechContext!) });
+          setTimeout(() => this.setState({ speech: null }), 2500);
+        }, 1200);
+      }
+      return;
+    }
+    this.runAction(action);
   }
 
   private scheduleRandom(): void {
-    const delay = getNextRandomInterval();
     this.randomTimer = setTimeout(() => {
-      this.runBehavior(getRandomBehavior());
+      if (this.charState.state === "idle") {
+        if (Math.random() < 0.4) {
+          this.maybeWalkToNewZone();
+        } else {
+          this.runIdleBehavior();
+        }
+      }
       this.scheduleRandom();
-    }, delay);
+    }, getRandomInterval());
   }
 
   start(): void {
-    this.triggerEvent("page_load");
+    this.runEntering("right");
+    setTimeout(() => {
+      this.setState({ state: "idle", speech: null });
+      this.scheduleRandom();
+    }, 1500);
 
-    this.unsubEvent = subscribeToCharacterEvents((type) => {
-      this.triggerEvent(type);
-    });
-
-    this.unsubIdle = setupIdleDetection(() => this.triggerEvent("idle"), 25000);
-    this.unsubScroll = setupScrollDetection(() => this.triggerEvent("scroll"), 600);
-
-    this.scheduleRandom();
+    this.unsubEvent = subscribeToCharacterEvents((type) => this.triggerEvent(type));
+    this.unsubIdle = setupIdleDetection(() => this.triggerEvent("idle"), 35000);
+    this.unsubScroll = setupScrollDetection(() => this.triggerEvent("scroll"), 700);
   }
 
   stop(): void {
-    if (this.randomTimer) {
-      clearTimeout(this.randomTimer);
-      this.randomTimer = null;
-    }
+    if (this.randomTimer) clearTimeout(this.randomTimer);
+    this.randomTimer = null;
     this.unsubEvent?.();
     this.unsubIdle?.();
     this.unsubScroll?.();
