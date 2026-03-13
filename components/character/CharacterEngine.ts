@@ -1,10 +1,10 @@
 /**
- * CharacterEngine - 상태 기반 캐릭터 오케스트레이션
- * 자연스러운 수평 이동만, 텔레포트 없음
+ * CharacterEngine - 상태 기반 오케스트레이션
+ * 지속적 움직임, 자주 전환
  */
 
 import {
-  getNextIdleBehavior,
+  getNextPoseBehavior,
   getRandomInterval,
   getEventReaction,
   getZonePx,
@@ -17,20 +17,24 @@ import {
   setupScrollDetection,
 } from "./CharacterEvents";
 import type { CharacterEventType } from "./CharacterEvents";
-import { OFFSCREEN_LEFT, OFFSCREEN_RIGHT, WALK_SPEED } from "./CharacterAnimations";
+import { OFFSCREEN_LEFT, WALK_SPEED } from "./CharacterAnimations";
 import type { Zone } from "./CharacterAnimations";
 
 export type MascotState =
   | "hidden"
   | "entering"
+  | "walking"
   | "idle"
-  | "peeking"
   | "pointing"
+  | "peeking"
   | "speaking"
-  | "moving"
+  | "posing"
   | "exiting"
   | "shrug"
-  | "lookAround";
+  | "lookAround"
+  | "armsCrossed"
+  | "letsGo"
+  | "thinking";
 
 export interface CharacterState {
   state: MascotState;
@@ -50,7 +54,7 @@ export class CharacterEngine {
     speech: null,
     visible: false,
   };
-  private currentZone: Zone = "left";
+  private currentZone: Zone = "center";
   private listeners = new Set<StateCallback>();
   private randomTimer: ReturnType<typeof setTimeout> | null = null;
   private unsubEvent: (() => void) | null = null;
@@ -67,18 +71,12 @@ export class CharacterEngine {
   }
 
   private notify(): void {
-    const s = this.getState();
-    this.listeners.forEach((cb) => cb(s));
+    this.listeners.forEach((cb) => cb(this.getState()));
   }
 
   private setState(partial: Partial<CharacterState>): void {
     this.charState = { ...this.charState, ...partial };
     this.notify();
-  }
-
-  private walkTo(targetX: number, duration: number): void {
-    this.setState({ state: "moving" });
-    this.setState({ x: targetX });
   }
 
   private runEntering(targetZone: Zone): void {
@@ -92,36 +90,37 @@ export class CharacterEngine {
       speech: null,
     });
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        this.setState({ x: targetX });
-      });
+      requestAnimationFrame(() => this.setState({ x: targetX }));
     });
   }
 
   private runAction(action: ReturnType<typeof getEventReaction>): void {
     const { state, speechContext, targetZone, duration } = action;
-    const phrase = speechContext ? getRandomPhrase(speechContext) : null;
 
     if (state === "entering" && targetZone) {
       this.runEntering(targetZone);
+      if (speechContext) {
+        setTimeout(() => {
+          this.setState({ speech: getRandomPhrase(speechContext!) });
+          setTimeout(() => this.setState({ speech: null }), 3000);
+        }, 1100);
+      }
       return;
     }
 
-    this.setState({
-      state,
-      speech: phrase ?? this.charState.speech,
-    });
+    const phrase = speechContext ? getRandomPhrase(speechContext) : null;
+    this.setState({ state, speech: phrase ?? null });
 
     setTimeout(() => {
       this.setState({ speech: null });
-      if (state !== "idle" && state !== "moving" && state !== "entering") {
+      if (!["idle", "walking", "entering"].includes(state)) {
         this.setState({ state: "idle" });
       }
     }, duration);
   }
 
-  private runIdleBehavior(): void {
-    const action = getNextIdleBehavior();
+  private runPoseBehavior(): void {
+    const action = getNextPoseBehavior();
     this.setState({
       state: action.state,
       speech: action.speechContext ? getRandomPhrase(action.speechContext) : null,
@@ -131,55 +130,57 @@ export class CharacterEngine {
     }, action.duration);
   }
 
-  private maybeWalkToNewZone(): void {
-    const nextZone = getAdjacentZone(this.currentZone);
+  private walkToZone(nextZone: Zone): void {
     const targetX = getZonePx(nextZone);
     const dist = Math.abs(targetX - this.charState.x);
-    const duration = Math.max(1000, (dist / 100) * WALK_SPEED);
+    const duration = Math.max(1200, (dist / 100) * WALK_SPEED);
     this.currentZone = nextZone;
-    this.setState({ facing: targetX > this.charState.x ? "right" : "left" });
-    this.walkTo(targetX, duration);
-    setTimeout(() => this.setState({ state: "idle" }), duration);
+    this.setState({
+      state: "walking",
+      facing: targetX > this.charState.x ? "right" : "left",
+      speech: null,
+    });
+    this.setState({ x: targetX });
+    setTimeout(() => {
+      this.setState({ state: "idle" });
+    }, duration);
   }
 
   triggerEvent(type: CharacterEventType): void {
     const action = getEventReaction(type);
-    if (action.state === "entering") {
-      this.runEntering(action.targetZone ?? "right");
-      if (action.speechContext) {
-        setTimeout(() => {
-          this.setState({ speech: getRandomPhrase(action.speechContext!) });
-          setTimeout(() => this.setState({ speech: null }), 2500);
-        }, 1200);
-      }
-      return;
-    }
     this.runAction(action);
   }
 
-  private scheduleRandom(): void {
+  private scheduleNext(): void {
     this.randomTimer = setTimeout(() => {
-      if (this.charState.state === "idle") {
-        if (Math.random() < 0.4) {
-          this.maybeWalkToNewZone();
+      const s = this.charState.state;
+      if (s === "idle" || s === "lookAround" || s === "shrug" || s === "armsCrossed" || s === "letsGo" || s === "thinking" || s === "peeking") {
+        if (Math.random() < 0.6) {
+          this.walkToZone(getAdjacentZone(this.currentZone));
         } else {
-          this.runIdleBehavior();
+          this.runPoseBehavior();
         }
       }
-      this.scheduleRandom();
+      this.scheduleNext();
     }, getRandomInterval());
   }
 
   start(): void {
-    this.runEntering("right");
+    this.runEntering("center");
+    if (this.charState.visible) {
+      setTimeout(() => {
+        this.setState({ speech: getRandomPhrase("page_load") });
+        setTimeout(() => this.setState({ speech: null }), 2800);
+      }, 1000);
+    }
     setTimeout(() => {
       this.setState({ state: "idle", speech: null });
-      this.scheduleRandom();
-    }, 1500);
+      this.scheduleNext();
+    }, 1700);
 
     this.unsubEvent = subscribeToCharacterEvents((type) => this.triggerEvent(type));
-    this.unsubIdle = setupIdleDetection(() => this.triggerEvent("idle"), 35000);
-    this.unsubScroll = setupScrollDetection(() => this.triggerEvent("scroll"), 700);
+    this.unsubIdle = setupIdleDetection(() => this.triggerEvent("idle"), 28000);
+    this.unsubScroll = setupScrollDetection(() => this.triggerEvent("scroll"), 600);
   }
 
   stop(): void {
