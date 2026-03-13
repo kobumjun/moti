@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Page } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
+import { dispatchCharacterEvent } from "./character";
 
 interface PageEditorProps {
   page: Page;
@@ -61,6 +62,7 @@ export default function PageEditor({
         <div className="flex gap-2">
           <button
             onClick={handleSave}
+            onMouseEnter={() => dispatchCharacterEvent("button_hover")}
             disabled={!hasChanges}
             className="px-4 py-2 rounded-lg bg-moti-accent text-white text-sm font-medium hover:bg-moti-accentDim disabled:opacity-50 disabled:cursor-not-allowed"
           >
