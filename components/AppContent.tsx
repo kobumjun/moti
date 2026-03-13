@@ -27,7 +27,7 @@ type CharacterState =
   | "talk";
 
 export default function AppContent({ initialPages }: AppContentProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [pages, setPages] = useState<PageWithChildren[]>(initialPages);
   const [selectedPage, setSelectedPage] = useState<Page | null>(null);
   const [rushMessage, setRushMessage] = useState<string | null>(null);
@@ -58,6 +58,7 @@ export default function AppContent({ initialPages }: AppContentProps) {
           body: JSON.stringify({
             pageTitle: title,
             content,
+            lang,
           }),
         });
         const json = await res.json();
@@ -74,7 +75,7 @@ export default function AppContent({ initialPages }: AppContentProps) {
         setIsLoadingAI(false);
       }
     },
-    [triggerRush]
+    [triggerRush, lang]
   );
 
   const refreshPages = useCallback(async () => {
@@ -201,6 +202,7 @@ export default function AppContent({ initialPages }: AppContentProps) {
           pageTitle: title,
           content,
           requestAnother: true,
+          lang,
         }),
       });
       const json = await res.json();
@@ -212,7 +214,7 @@ export default function AppContent({ initialPages }: AppContentProps) {
     } finally {
       setIsLoadingAI(false);
     }
-  }, [selectedPage, currentEditorTitle, currentEditorContent]);
+  }, [selectedPage, currentEditorTitle, currentEditorContent, lang]);
 
   return (
     <div className="flex flex-1 overflow-hidden">

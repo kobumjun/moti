@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRushAIComment } from "@/lib/openai";
+import type { AppLanguage } from "@/lib/translations";
 
 export async function POST(request: Request) {
   try {
@@ -8,13 +9,16 @@ export async function POST(request: Request) {
       contentPreview?: string;
       content?: string;
       requestAnother?: boolean;
+      lang?: AppLanguage;
     };
     const pageTitle = body.pageTitle ?? "Untitled";
     const content = body.content ?? body.contentPreview ?? "";
     const requestAnother = body.requestAnother === true;
+    const lang = body.lang === "ko" || body.lang === "en" ? body.lang : "en";
 
     const comment = await getRushAIComment(pageTitle, content, {
       requestAnother,
+      lang,
     });
 
     return NextResponse.json({ comment });
