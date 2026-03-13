@@ -39,12 +39,12 @@ export default function AppContent({ initialPages }: AppContentProps) {
 
   const triggerRush = useCallback(
     (action: RushAction, state: CharacterState, message?: string) => {
-      setRushMessage(message ?? getRandomResponse(action));
+      setRushMessage(message ?? getRandomResponse(action, lang));
       setRushState(state);
       setTimeout(() => setRushState("idle"), 1500);
       setTimeout(() => setRushMessage(null), 6000);
     },
-    []
+    [lang]
   );
 
   const triggerRushWithAI = useCallback(

@@ -1,7 +1,9 @@
 /**
- * RUSH AI 캐릭터 - 로컬 템플릿 기반 반응
- * API 호출 없이 빠른 반응을 위한 멘트 모음
+ * RUSH AI - Language-aware template responses
+ * Used when API is not called (page create, delete, empty save, fallbacks)
  */
+
+import type { AppLanguage } from "@/lib/translations";
 
 export type RushAction =
   | "page_create"
@@ -12,7 +14,45 @@ export type RushAction =
   | "idle"
   | "ask_ai";
 
-const RESPONSES: Record<RushAction, string[]> = {
+const RESPONSES_EN: Record<RushAction, string[]> = {
+  page_create: [
+    "New page? Nice. Every page is a step. Let's go!",
+    "New page? Perfect. Blank canvas hits different.",
+    "Another one! Building momentum.",
+    "Page created. Good choice. No rest, 24/7 hustle.",
+  ],
+  page_save: [
+    "Saved. Keep going. Small logs build big results.",
+    "Locked in. Today's a win.",
+    "Saved. Motion creates momentum.",
+    "Done. Consistency wins.",
+  ],
+  subpage_create: [
+    "Subpage? Nice. Structure is half the win.",
+    "Adding hierarchy? Love it. Pros organize.",
+    "Structure = clarity. Let's go.",
+    "Subpage added. Good move.",
+  ],
+  content_save: [
+    "Good memo. Keep stacking.",
+    "Saved. Logging habit = winning habit.",
+    "Locked. Your brain will thank you.",
+    "Small logs, big impact.",
+  ],
+  delete: [
+    "Deleted. Less is more sometimes.",
+    "Cleaned up. Fresh slate.",
+    "Removed. Sometimes subtracting is the move.",
+  ],
+  idle: [
+    "Ready when you are. I'm watching.",
+    "Chill. But don't rest too long.",
+    "Let's go.",
+  ],
+  ask_ai: [], // OpenAI API response
+};
+
+const RESPONSES_KO: Record<RushAction, string[]> = {
   page_create: [
     "오, 새로운 페이지? Nice. Every page is a step. Let's go!",
     "페이지 생성? Perfect. 빈 캔버스가 가장 설렌다. 가보자.",
@@ -47,11 +87,15 @@ const RESPONSES: Record<RushAction, string[]> = {
     "Ready when you are.",
     "편해. 하지만 쉬지 마.",
   ],
-  ask_ai: [], // OpenAI API 응답 사용
+  ask_ai: [],
 };
 
-export function getRandomResponse(action: RushAction): string {
-  const list = RESPONSES[action];
-  if (!list.length) return "Let's go.";
+export function getRandomResponse(
+  action: RushAction,
+  lang: AppLanguage = "en"
+): string {
+  const responses = lang === "ko" ? RESPONSES_KO : RESPONSES_EN;
+  const list = responses[action];
+  if (!list.length) return lang === "ko" ? "가. ㅋ" : "Let's go.";
   return list[Math.floor(Math.random() * list.length)]!;
 }
