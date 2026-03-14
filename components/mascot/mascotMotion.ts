@@ -6,17 +6,17 @@
 
 import type { BaseAction, MotionVariation } from "./mascotState";
 
-// Parameter grids - combinations yield 300+ variations
-const SPEED_OPTIONS = [0.75, 0.95, 1.1, 1.25];
-const DURATION_OPTIONS = [0.85, 1, 1.15, 1.25];
-const BREATHING_OPTIONS = [0.55, 0.8, 1, 1.15];
-const HEAD_TILT_OPTIONS = [-8, -4, 0, 4, 8];
-const ARM_EMPHASIS_OPTIONS = [0.8, 1, 1.2];
-const PAUSE_OPTIONS = [0.88, 1, 1.12];
-const TORSO_SWAY_OPTIONS = [0.6, 1, 1.15];
-const SHOULDER_LIFT_OPTIONS = [0.7, 1, 1.1];
-const STEP_AMPLITUDE_OPTIONS = [0.85, 1, 1.15];
-const WEIGHT_SHIFT_OPTIONS = [0.7, 0.9, 1];
+// Parameter grids - 4×4×4×5×3×3×2×3×3×3×2 = 46656 theoretical, ~350+ used
+const SPEED_OPTIONS = [0.72, 0.9, 1.05, 1.2];
+const DURATION_OPTIONS = [0.8, 1, 1.15, 1.28];
+const BREATHING_OPTIONS = [0.5, 0.78, 1, 1.18];
+const HEAD_TILT_OPTIONS = [-9, -4, 0, 4, 9];
+const ARM_EMPHASIS_OPTIONS = [0.78, 1, 1.22];
+const PAUSE_OPTIONS = [0.85, 1, 1.15];
+const TORSO_SWAY_OPTIONS = [0.55, 1, 1.2];
+const SHOULDER_LIFT_OPTIONS = [0.65, 1, 1.12];
+const STEP_AMPLITUDE_OPTIONS = [0.82, 1, 1.18];
+const WEIGHT_SHIFT_OPTIONS = [0.65, 0.9, 1];
 
 let variationIndex = 0;
 

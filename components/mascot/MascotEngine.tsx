@@ -21,7 +21,7 @@ import MascotRenderer from "./MascotRenderer";
 const CHAR_WIDTH = 100;
 const CHAR_HEIGHT = 150;
 const ARRIVAL_THRESHOLD = 8;
-const WALK_FRAME_MS = 120;
+const WALK_FRAME_MS = 80;
 const IDLE_DIALOGUE_MIN = 30000;
 const IDLE_DIALOGUE_MAX = 90000;
 
@@ -198,7 +198,7 @@ export default function MascotEngine() {
       walkFrameAcc.current += dt * 1000;
       const newFrame =
         walkFrameAcc.current >= WALK_FRAME_MS
-          ? (s.walkFrame + 1) % 4
+          ? (s.walkFrame + 1) % 8
           : s.walkFrame;
       if (walkFrameAcc.current >= WALK_FRAME_MS) walkFrameAcc.current = 0;
 
@@ -224,23 +224,54 @@ export default function MascotEngine() {
     const flows: { zone: ZoneKey; action: string; speech?: DialogueKey; duration: number }[][] = [
       [
         { zone: "bottomLeft", action: "idleBreathing", speech: "intro", duration: 2500 },
+        { zone: "bottomLeft", action: "lookLeft", duration: 1200 },
         { zone: "pageList", action: "walk", duration: 0 },
         { zone: "pageList", action: "point", speech: "page_selected", duration: 2200 },
         { zone: "editorCenter", action: "walk", duration: 0 },
-        { zone: "editorCenter", action: "idleBreathing", duration: 2800 },
+        { zone: "editorCenter", action: "idleBreathing", duration: 1800 },
+        { zone: "editorCenter", action: "think", duration: 2000 },
+        { zone: "editorCenter", action: "recoverNeutral", duration: 800 },
         { zone: "saveArea", action: "walk", duration: 0 },
         { zone: "saveArea", action: "point", speech: "page_selected", duration: 2200 },
         { zone: "bottomRight", action: "walk", duration: 0 },
-        { zone: "bottomRight", action: "idleBreathing", duration: 3000 },
+        { zone: "bottomRight", action: "proudStance", duration: 2400 },
+        { zone: "bottomRight", action: "recoverNeutral", duration: 600 },
+      ],
+      [
+        { zone: "bottomCenter", action: "idleBreathing", duration: 1500 },
+        { zone: "bottomCenter", action: "glanceAround", duration: 1800 },
+        { zone: "pageList", action: "walk", duration: 0 },
+        { zone: "pageList", action: "crossArms", duration: 2200 },
+        { zone: "pageList", action: "think", duration: 2000 },
+        { zone: "pageList", action: "recoverNeutral", duration: 800 },
+        { zone: "logoutArea", action: "walk", duration: 0 },
+        { zone: "logoutArea", action: "wave", speech: "near_logout", duration: 2800 },
+        { zone: "bottomCenter", action: "walk", duration: 0 },
+        { zone: "bottomCenter", action: "idleBreathing", duration: 3500 },
+      ],
+      [
+        { zone: "bottomLeft", action: "warmUp", duration: 1600 },
+        { zone: "bottomLeft", action: "recoverNeutral", duration: 600 },
+        { zone: "editorCenter", action: "walk", duration: 0 },
+        { zone: "editorCenter", action: "inspect", duration: 2000 },
+        { zone: "editorCenter", action: "chinTouch", duration: 1800 },
+        { zone: "saveArea", action: "walk", duration: 0 },
+        { zone: "saveArea", action: "handsOnWaist", duration: 2000 },
+        { zone: "bottomRight", action: "walk", duration: 0 },
+        { zone: "bottomRight", action: "frontDoubleBiceps", duration: 2200 },
+        { zone: "bottomRight", action: "recoverNeutral", duration: 800 },
       ],
       [
         { zone: "bottomCenter", action: "peekFromEdge", speech: "idle", duration: 2000 },
         { zone: "pageList", action: "walk", duration: 0 },
         { zone: "pageList", action: "shrug", duration: 2200 },
-        { zone: "logoutArea", action: "walk", duration: 0 },
-        { zone: "logoutArea", action: "wave", speech: "near_logout", duration: 2800 },
-        { zone: "bottomCenter", action: "walk", duration: 0 },
-        { zone: "bottomCenter", action: "idleBreathing", duration: 4000 },
+        { zone: "center", action: "walk", duration: 0 },
+        { zone: "center", action: "slightCrouch", duration: 1200 },
+        { zone: "center", action: "smallJump", duration: 800 },
+        { zone: "center", action: "land", duration: 600 },
+        { zone: "center", action: "recoverNeutral", duration: 1000 },
+        { zone: "bottomLeft", action: "walk", duration: 0 },
+        { zone: "bottomLeft", action: "idleBreathing", duration: 4000 },
       ],
     ];
 

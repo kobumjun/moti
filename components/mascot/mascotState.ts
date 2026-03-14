@@ -59,7 +59,20 @@ export type BaseAction =
   | "capeAdjust"
   | "talk"
   | "facepalm"
-  | "celebrate";
+  | "celebrate"
+  | "frontDoubleBiceps"
+  | "latsSpread"
+  | "armShakeOut"
+  | "chestFlex"
+  | "sit"
+  | "seatedIdle"
+  | "standUp"
+  | "jump"
+  | "land"
+  | "farJumpPrep"
+  | "farJumpTakeoff"
+  | "farJumpLand"
+  | "recoverLanding";
 
 export interface MotionVariation {
   speed: number;           // 0.7 - 1.3
