@@ -12,7 +12,7 @@ import {
   type FlowStep,
   type PoseState,
 } from "./CharacterAnimations";
-import { getPhrase, getPhraseFromText } from "./CharacterSpeech";
+import { getPhrase, getPhraseFromText, getRandomIdlePhrase } from "./CharacterSpeech";
 import {
   subscribeToCharacterEvents,
   setupIdleDetection,
@@ -59,6 +59,7 @@ export class CharacterEngine {
   private lastTime = 0;
   private walkFrameAcc = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private idleDialogueTimer: ReturnType<typeof setTimeout> | null = null;
   private unsub: (() => void)[] = [];
 
   getState() {
@@ -259,10 +260,37 @@ export class CharacterEngine {
     this.scheduleNextTick();
   }
 
+  private scheduleIdleDialogue() {
+    if (this.idleDialogueTimer) clearTimeout(this.idleDialogueTimer);
+    const delay = 30000 + Math.random() * 60000;
+    this.idleDialogueTimer = setTimeout(() => {
+      if (this.s.state === "idle" && !this.s.speech && (this.vx === 0 && this.vy === 0)) {
+        this.setState({ state: "talk", speech: getRandomIdlePhrase() });
+        setTimeout(() => this.setState({ speech: null, state: "idle" }), 2400);
+      }
+      this.scheduleIdleDialogue();
+    }, delay);
+  }
+
   triggerEvent(detail: CharacterEventDetail) {
-    if (detail.type === "button_hover" || detail.type === "idle") {
+    if (detail.type === "button_hover" || detail.type === "idle" || detail.type === "page_create") {
       if (this.timer) clearTimeout(this.timer);
       this.timer = null;
+    }
+    if (detail.type === "page_create") {
+      this.onArrive = () => {
+        this.setState({
+          state: "talk",
+          speech: getPhrase("page_create"),
+          facing: "right",
+        });
+        setTimeout(() => {
+          this.setState({ speech: null, state: "idle" });
+          this.runNextStep();
+        }, 2200);
+      };
+      this.walkTo("pageList");
+      return;
     }
     if (detail.type === "text_change" && detail.content) {
       const phrase = getPhraseFromText(detail.content);
@@ -313,6 +341,7 @@ export class CharacterEngine {
     this.flowIndex = 0;
     this.stepIndex = 0;
     this.runEntering();
+    this.scheduleIdleDialogue();
 
     this.unsub.push(
       subscribeToCharacterEvents((d) => this.triggerEvent(d)),
@@ -325,6 +354,8 @@ export class CharacterEngine {
     this.rafId = null;
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
+    if (this.idleDialogueTimer) clearTimeout(this.idleDialogueTimer);
+    this.idleDialogueTimer = null;
     this.unsub.forEach((f) => f());
   }
 }

@@ -114,157 +114,196 @@ function SuperheroMascot({ state, walkFrame }: { state: MascotState; walkFrame: 
     >
       <defs>
         <linearGradient id="hero-body" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#3b82f6" />
-          <stop offset="40%" stopColor="#2563eb" />
-          <stop offset="100%" stopColor="#1d4ed8" />
+          <stop offset="0%" stopColor="#60a5fa" />
+          <stop offset="35%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#2563eb" />
         </linearGradient>
-        <linearGradient id="hero-body-shadow" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#1e40af" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.6" />
+        <linearGradient id="hero-body-shade" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#1e40af" stopOpacity="0.25" />
+          <stop offset="50%" stopColor="transparent" />
+          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
         </linearGradient>
         <linearGradient id="hero-cape" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#5b21b6" />
+          <stop offset="0%" stopColor="#8b5cf6" />
+          <stop offset="100%" stopColor="#6d28d9" />
         </linearGradient>
         <linearGradient id="hero-mask" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#1e293b" />
-          <stop offset="100%" stopColor="#0f172a" />
+          <stop offset="0%" stopColor="#334155" />
+          <stop offset="100%" stopColor="#1e293b" />
         </linearGradient>
         <linearGradient id="hero-belt" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#fbbf24" />
+          <stop offset="0%" stopColor="#fcd34d" />
           <stop offset="100%" stopColor="#f59e0b" />
+        </linearGradient>
+        <linearGradient id="hero-glove" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#f8fafc" />
+          <stop offset="100%" stopColor="#cbd5e1" />
+        </linearGradient>
+        <linearGradient id="hero-boot" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#475569" />
+          <stop offset="100%" stopColor="#1e293b" />
         </linearGradient>
       </defs>
 
-      {/* Cape - behind body */}
+      {/* Short cape - behind body */}
       <path
-        d="M 18 38 Q 8 55 12 90 L 28 88 L 26 50 Z M 54 38 Q 64 55 60 90 L 44 88 L 46 50 Z"
+        d="M 20 40 Q 12 58 16 78 L 24 76 L 24 52 Z M 52 40 Q 60 58 56 78 L 48 76 L 48 52 Z"
         fill="url(#hero-cape)"
-        stroke="#4c1d95"
-        strokeWidth="1.5"
+        stroke="#5b21b6"
+        strokeWidth="1"
       />
 
-      {/* Body - slim superhero torso */}
+      {/* Torso - athletic with muscle curve */}
       <path
-        d="M 28 32 L 44 32 L 48 75 L 40 78 L 32 78 L 24 75 Z"
+        d="M 26 30 Q 26 32 28 38 L 30 68 Q 32 76 36 78 Q 40 76 42 68 L 44 38 Q 46 32 46 30 Q 40 26 36 26 Q 32 26 26 30 Z"
         fill="url(#hero-body)"
-        stroke="#1e40af"
+        stroke="#2563eb"
         strokeWidth="1.5"
       />
       <path
-        d="M 30 35 L 42 35 L 45 72 L 36 75 L 27 72 Z"
-        fill="url(#hero-body-shadow)"
+        d="M 30 35 Q 34 50 36 70 L 36 74 Q 34 72 32 68 L 30 45 Z"
+        fill="url(#hero-body-shade)"
       />
 
       {/* Belt */}
-      <rect x="26" y="70" width="20" height="6" rx="2" fill="url(#hero-belt)" stroke="#d97706" strokeWidth="1" />
-      <circle cx="36" cy="73" r="2.5" fill="#fef3c7" stroke="#d97706" strokeWidth="0.5" />
+      <path d="M 26 72 L 46 72 L 46 76 L 26 76 Z" fill="url(#hero-belt)" stroke="#d97706" strokeWidth="1" />
+      <circle cx="36" cy="74" r="2.5" fill="#fef3c7" stroke="#d97706" strokeWidth="0.5" />
 
-      {/* Head - with mask */}
-      <ellipse cx="36" cy="22" rx="14" ry="16" fill="#fcd5b0" stroke="#e8a87c" strokeWidth="1" />
+      {/* Head + mask */}
+      <ellipse cx="36" cy="20" rx="13" ry="15" fill="#fcd5b0" stroke="#e8a87c" strokeWidth="1" />
       <path
-        d="M 22 18 Q 36 12 50 18 L 50 26 Q 36 30 22 26 Z"
+        d="M 23 17 Q 36 11 49 17 L 49 24 Q 36 28 23 24 Z"
         fill="url(#hero-mask)"
         stroke="#0f172a"
         strokeWidth="1"
       />
-      <ellipse cx="30" cy="22" rx="3" ry="3.5" fill="white" opacity="0.9" />
-      <ellipse cx="42" cy="22" rx="3" ry="3.5" fill="white" opacity="0.9" />
-      <circle cx="30.5" cy="22" r="1.2" fill="#0f172a" />
-      <circle cx="42.5" cy="22" r="1.2" fill="#0f172a" />
+      <ellipse cx="30" cy="20" rx="2.5" ry="3" fill="white" />
+      <ellipse cx="42" cy="20" rx="2.5" ry="3" fill="white" />
+      <circle cx="30.5" cy="20" r="1" fill="#0f172a" />
+      <circle cx="42.5" cy="20" r="1" fill="#0f172a" />
 
-      {/* Arms */}
+      {/* Arms - proper shape with gloves */}
       {isPoint ? (
         <g>
-          <path d="M 24 48 L 10 32" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
-          <path d="M 48 48 L 56 58" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 24 46 Q 18 40 12 34" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+          <ellipse cx="11" cy="33" rx="5" ry="6" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
+          <path d="M 48 46 L 54 54" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+          <ellipse cx="55" cy="55" rx="4" ry="5" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
         </g>
       ) : isShrug ? (
         <g>
-          <path d="M 22 46 Q 28 38 36 46" stroke="#2563eb" strokeWidth="5" fill="none" strokeLinecap="round" />
-          <path d="M 50 46 Q 44 38 36 46" stroke="#2563eb" strokeWidth="5" fill="none" strokeLinecap="round" />
+          <path d="M 22 45 Q 28 38 36 45" stroke="#3b82f6" strokeWidth="6" fill="none" strokeLinecap="round" />
+          <ellipse cx="20" cy="48" rx="5" ry="6" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
+          <path d="M 50 45 Q 44 38 36 45" stroke="#3b82f6" strokeWidth="6" fill="none" strokeLinecap="round" />
+          <ellipse cx="52" cy="48" rx="5" ry="6" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
         </g>
       ) : isPeek ? (
         <g>
-          <path d="M 22 48 L 18 60" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
-          <path d="M 50 48 L 52 62" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 22 46 L 18 58" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+          <ellipse cx="17" cy="59" rx="5" ry="6" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
+          <path d="M 50 46 L 52 60" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+          <ellipse cx="53" cy="61" rx="4" ry="5" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
         </g>
       ) : isTalk ? (
         <g>
-          <path d="M 24 48 L 20 62" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
-          <path d="M 48 48 L 52 58" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 24 46 L 20 60" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+          <ellipse cx="19" cy="61" rx="5" ry="6" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
+          <path d="M 48 46 L 52 58" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+          <ellipse cx="53" cy="59" rx="4" ry="5" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
         </g>
       ) : isWalk ? (
         <g>
           {frame === 0 && (
             <>
-              <path d="M 24 50 L 18 66" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
-              <path d="M 48 50 L 54 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 22 46 L 16 62" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+              <ellipse cx="15" cy="63" rx="5" ry="6" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
+              <path d="M 50 46 L 56 60" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+              <ellipse cx="57" cy="61" rx="4" ry="5" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
             </>
           )}
           {frame === 1 && (
             <>
-              <path d="M 24 50 L 26 66" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
-              <path d="M 48 50 L 50 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 22 46 L 24 62" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+              <ellipse cx="23" cy="63" rx="5" ry="6" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
+              <path d="M 50 46 L 50 60" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+              <ellipse cx="51" cy="61" rx="4" ry="5" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
             </>
           )}
           {frame === 2 && (
             <>
-              <path d="M 24 50 L 30 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
-              <path d="M 48 50 L 42 66" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 22 46 L 28 60" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+              <ellipse cx="29" cy="61" rx="5" ry="6" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
+              <path d="M 50 46 L 44 62" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+              <ellipse cx="43" cy="63" rx="4" ry="5" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
             </>
           )}
           {frame === 3 && (
             <>
-              <path d="M 24 50 L 26 66" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
-              <path d="M 48 50 L 50 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 22 46 L 24 62" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+              <ellipse cx="23" cy="63" rx="5" ry="6" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
+              <path d="M 50 46 L 50 60" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+              <ellipse cx="51" cy="61" rx="4" ry="5" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
             </>
           )}
         </g>
       ) : (
         <g>
-          <path d="M 24 48 L 22 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
-          <path d="M 48 48 L 50 64" stroke="#2563eb" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 24 46 L 22 62" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+          <ellipse cx="21" cy="63" rx="5" ry="6" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
+          <path d="M 48 46 L 50 62" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" fill="none" />
+          <ellipse cx="51" cy="63" rx="4" ry="5" fill="url(#hero-glove)" stroke="#94a3b8" strokeWidth="1" />
         </g>
       )}
 
-      {/* Legs - walk cycle sprite */}
+      {/* Legs - thighs + boots */}
       {isWalk ? (
         <g>
           {frame === 0 && (
             <>
-              <path d="M 30 82 L 26 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
-              <path d="M 42 82 L 46 106" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 28 78 L 26 100 L 30 100 L 32 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+              <path d="M 26 98 L 24 108 L 32 108 L 32 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
+              <path d="M 44 78 L 44 100 L 48 100 L 46 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+              <path d="M 40 98 L 40 108 L 48 108 L 46 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
             </>
           )}
           {frame === 1 && (
             <>
-              <path d="M 30 82 L 32 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
-              <path d="M 42 82 L 42 106" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 30 78 L 30 100 L 34 100 L 34 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+              <path d="M 28 98 L 28 108 L 36 108 L 36 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
+              <path d="M 42 78 L 42 100 L 46 100 L 46 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+              <path d="M 40 98 L 40 108 L 48 108 L 46 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
             </>
           )}
           {frame === 2 && (
             <>
-              <path d="M 30 82 L 34 106" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
-              <path d="M 42 82 L 38 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 32 78 L 34 100 L 38 100 L 36 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+              <path d="M 32 98 L 32 108 L 40 108 L 40 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
+              <path d="M 40 78 L 38 100 L 42 100 L 42 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+              <path d="M 36 98 L 36 108 L 44 108 L 42 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
             </>
           )}
           {frame === 3 && (
             <>
-              <path d="M 30 82 L 32 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
-              <path d="M 42 82 L 42 106" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 30 78 L 30 100 L 34 100 L 34 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+              <path d="M 28 98 L 28 108 L 36 108 L 36 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
+              <path d="M 42 78 L 42 100 L 46 100 L 46 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+              <path d="M 40 98 L 40 108 L 48 108 L 46 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
             </>
           )}
         </g>
       ) : isPeek ? (
         <g>
-          <path d="M 30 82 L 28 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
-          <path d="M 42 82 L 44 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 28 78 L 26 100 L 30 100 L 32 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+          <path d="M 26 98 L 24 108 L 32 108 L 32 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
+          <path d="M 44 78 L 44 100 L 48 100 L 46 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+          <path d="M 40 98 L 40 108 L 48 108 L 46 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
         </g>
       ) : (
         <g>
-          <path d="M 30 82 L 30 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
-          <path d="M 42 82 L 42 108" stroke="#1d4ed8" strokeWidth="5" strokeLinecap="round" />
+          <path d="M 28 78 L 28 100 L 32 100 L 34 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+          <path d="M 26 98 L 26 108 L 34 108 L 34 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
+          <path d="M 40 78 L 40 100 L 44 100 L 46 78 Z" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+          <path d="M 38 98 L 38 108 L 46 108 L 46 98 Z" fill="url(#hero-boot)" stroke="#0f172a" strokeWidth="1" />
         </g>
       )}
     </svg>

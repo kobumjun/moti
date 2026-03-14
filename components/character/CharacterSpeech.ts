@@ -1,5 +1,5 @@
 /**
- * CharacterSpeech - 시퀀스/이벤트/키워드 대사
+ * CharacterSpeech - playful motivational superhero personality
  */
 
 export type SpeechContext =
@@ -16,93 +16,136 @@ export type SpeechContext =
   | "keepGoing"
   | "button_hover"
   | "save_click"
+  | "page_create"
   | "workout"
   | "completion"
   | "tired"
   | "planning"
   | "generic"
-  | "reactingToText";
+  | "reactingToText"
+  | "idle";
 
 const PHRASES: Record<SpeechContext, string[]> = {
   intro: [
-    "이 사이트 내가 소개한다. 따라와.",
-    "좋아, 여기 흐름 잡혔다.",
-    "계속 가. 지금 끊으면 텐션 죽는다.",
+    "Stop? That's a loser's choice!",
+    "Keep moving, hero!",
+    "Today we write history. Let's go!",
   ],
   pageList: [
-    "저기 봐. 페이지 여기 있다.",
-    "이 리스트. 잘 정리해봐.",
+    "Your pages. Your story.",
+    "Organize like a champ!",
   ],
   nextZone: [
-    "좋아. 다음 구역 간다.",
-    "저기 에디터. 가보자.",
+    "To the editor we go!",
+    "Next stop: greatness!",
   ],
   editor: [
-    "여기 적어. 계속.",
-    "쓰는 거다. 멈추지 마.",
+    "Today we write history.",
+    "Greatness starts with one line!",
+    "Come on! Record the day!",
   ],
   toSave: [
-    "좋아, 이제 저장 쪽으로 간다.",
-    "저장 버튼 쪽으로.",
+    "Save button incoming!",
+    "Let's lock this in!",
   ],
   pointSave: [
-    "저기 봐. 다음은 저 버튼이다.",
-    "저장. 여기.",
+    "That one! Press it!",
+    "Save. Right there. Go!",
   ],
   peek: [
-    "뭐해. 저장했어?",
-    "여기 있어. 눈 감추지 마.",
+    "I see you, hero.",
+    "Still here. Still waiting!",
   ],
   shrug: [
-    "음... 괜찮은데?",
-    "이 정도면 됐어.",
+    "Hmm. Your call!",
+    "Whatever works, champ!",
   ],
   nearLogout: [
-    "절대 로그아웃 누르지 마. 아직 안 끝났어.",
-    "로그아웃? 아니다. 계속 해.",
+    "Logout? Not yet, hero!",
+    "Stay. One more line!",
   ],
   flow: [
-    "좋아, 여기 흐름 잡혔다.",
-    "계속 가.",
+    "Keep moving, hero!",
+    "Today we write history.",
   ],
   keepGoing: [
-    "좋아. 계속 가.",
-    "멈추지 마.",
+    "Don't stop now!",
+    "One line is enough. Go!",
   ],
   button_hover: [
-    "저기. 그거 눌러.",
-    "클릭. 지금.",
+    "That one! Press it!",
+    "Click it. You know you want to!",
   ],
   save_click: [
-    "저장. 이거 땀이야.",
-    "Nice. 저장됐다.",
+    "Boom! Memory secured!",
+    "Saved. Future you will thank you.",
+    "Locked in. That's a good one.",
+  ],
+  page_create: [
+    "Fresh page. Fresh story.",
+    "New page, hero!",
+    "Let's write something legendary.",
   ],
   workout: [
-    "운동했어? 좋네.",
-    "헬스? 가자.",
+    "Write like you train. Go!",
+    "Momentum! Keep it!",
   ],
   completion: [
-    "저장. 지금 하면 된다.",
-    "정리 잘했다.",
+    "That's how it's done!",
+    "Locked in. Nice!",
   ],
   tired: [
-    "피곤해? 한 줄만 더.",
-    "졸리면 손 먼저 움직여.",
+    "One more line, hero!",
+    "Tired? Heroes push through!",
   ],
   planning: [
-    "목표 세웠어? 실행해.",
-    "계획만 하지 말고 해.",
+    "Plans are good. Action is better!",
+    "Write it down. Make it real!",
   ],
   generic: [
-    "좋아. 한 줄 더.",
-    "지금 저장 안 하면 손해다.",
-    "계속 써.",
+    "Greatness starts with one line.",
+    "Come on hero, drop a line.",
   ],
   reactingToText: [
-    "좋아. 계속.",
-    "이거 된다.",
+    "Yes! That's the spirit!",
+    "Keep going! I see you!",
+  ],
+  idle: [
+    "Today's story won't write itself.",
+    "Come on hero, drop a line.",
+    "You lived today. Record it.",
+    "History loves people who write.",
+    "Write something worth remembering.",
+    "Let's go. One line is enough.",
+    "Great days deserve records.",
+    "Stop? That's a loser's choice!",
+    "Keep moving, hero!",
+    "Today we write history.",
+    "The page is waiting. What are you?",
+    "Heroes don't watch. They write.",
+    "One word changes everything.",
   ],
 };
+
+const IDLE_PHRASES = PHRASES.idle;
+const IDLE_AVOID_RECENT = 5;
+
+let lastUsedIdle: string[] = [];
+
+export function getPhrase(key: SpeechContext): string {
+  const list = PHRASES[key];
+  if (!list?.length) return PHRASES.generic[Math.floor(Math.random() * PHRASES.generic.length)]!;
+  return list[Math.floor(Math.random() * list.length)]!;
+}
+
+export function getRandomIdlePhrase(): string {
+  const avoid = new Set(lastUsedIdle);
+  const candidates = IDLE_PHRASES.filter((p) => !avoid.has(p));
+  const list = candidates.length > 0 ? candidates : IDLE_PHRASES;
+  const chosen = list[Math.floor(Math.random() * list.length)]!;
+  lastUsedIdle = [chosen, ...lastUsedIdle.slice(0, IDLE_AVOID_RECENT - 1)];
+  return chosen;
+}
 
 const KEYWORD_MAP: { pattern: RegExp; context: SpeechContext }[] = [
   { pattern: /운동|헬스|스쿼트|러닝|벌크|다이어트|gym|workout/i, context: "workout" },
@@ -110,12 +153,6 @@ const KEYWORD_MAP: { pattern: RegExp; context: SpeechContext }[] = [
   { pattern: /피곤|졸림|지침|힘듦|tired|sleepy/i, context: "tired" },
   { pattern: /계획|목표|루틴|plan|goal|routine/i, context: "planning" },
 ];
-
-export function getPhrase(key: SpeechContext): string {
-  const list = PHRASES[key];
-  if (!list?.length) return PHRASES.generic[Math.floor(Math.random() * PHRASES.generic.length)]!;
-  return list[Math.floor(Math.random() * list.length)]!;
-}
 
 export function getPhraseFromText(text: string): string | null {
   const t = (text || "").trim();
