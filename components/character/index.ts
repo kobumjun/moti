@@ -1,2 +1,6 @@
-export { default as CharacterUI } from "./CharacterUI";
-export { dispatchCharacterEvent } from "./CharacterEvents";
+export {
+  dispatchCharacterEvent,
+  subscribeToCharacterEvents,
+  setupIdleDetection,
+} from "./CharacterEvents";
+export type { CharacterEventType, CharacterEventDetail } from "./CharacterEvents";

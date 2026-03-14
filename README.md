@@ -66,7 +66,7 @@ components/
   AppContent.tsx    # 사이드바 + 에디터 + RUSH
   Sidebar.tsx       # 페이지 트리
   PageEditor.tsx    # 제목/본문 편집
-  RushCharacter.tsx # AI 캐릭터 UI
+  MascotEngine # Walking mascot UI
 lib/
   supabase/         # Supabase 클라이언트
   rush-responses.ts # 로컬 반응 템플릿
