@@ -1,7 +1,7 @@
 /**
- * heroRigParts - 25 animation-ready SVG parts for the comic-style superhero mascot.
- * Each part has path data, pivot point, and fill. NO external assets.
- * Color palette: navy #0d47a1, red #b71c1c, dark #1a237e, skin #e8b88c, black #1a1a1a
+ * heroRigParts - 26 animation-ready SVG parts for a premium comic-style superhero.
+ * Clean human proportions, NO external assets. Dark navy + red palette.
+ * Each part preserves a coherent human silhouette when assembled.
  */
 
 export const VIEW_WIDTH = 200;
@@ -9,17 +9,18 @@ export const VIEW_HEIGHT = 400;
 
 export type PartId =
   | "cape_upper"
-  | "cape_lower_left"
-  | "cape_lower_right"
+  | "cape_left"
+  | "cape_right"
   | "pelvis"
   | "abdomen"
-  | "chest"
+  | "lower_chest"
+  | "upper_chest"
   | "neck"
   | "head"
-  | "face"
+  | "mask"
   | "hair"
-  | "shoulder_left"
-  | "shoulder_right"
+  | "left_shoulder"
+  | "right_shoulder"
   | "left_upper_arm"
   | "left_forearm"
   | "left_hand"
@@ -35,8 +36,8 @@ export type PartId =
 
 export const PARTS_DRAW_ORDER: PartId[] = [
   "cape_upper",
-  "cape_lower_left",
-  "cape_lower_right",
+  "cape_left",
+  "cape_right",
   "left_thigh",
   "right_thigh",
   "left_shin",
@@ -45,9 +46,10 @@ export const PARTS_DRAW_ORDER: PartId[] = [
   "right_foot",
   "pelvis",
   "abdomen",
-  "chest",
-  "shoulder_left",
-  "shoulder_right",
+  "lower_chest",
+  "upper_chest",
+  "left_shoulder",
+  "right_shoulder",
   "left_upper_arm",
   "right_upper_arm",
   "left_forearm",
@@ -56,7 +58,7 @@ export const PARTS_DRAW_ORDER: PartId[] = [
   "right_hand",
   "neck",
   "head",
-  "face",
+  "mask",
   "hair",
 ];
 
@@ -71,178 +73,195 @@ export interface PartDef {
 const NAVY = "#0d47a1";
 const NAVY_DARK = "#1a237e";
 const RED = "#b71c1c";
-const RED_ACCENT = "#c62828";
-const SKIN = "#e8b88c";
-const SKIN_SHADOW = "#d4a574";
-const BLACK = "#1a1a1a";
+const RED_DARK = "#8b0000";
+const SKIN = "#e8c9a8";
+const BLACK = "#151515";
+
+// Helper: rounded rect (x,y,w,h,r)
+function rr(x: number, y: number, w: number, h: number, r: number): string {
+  const [a, b, c, d] = [x, y, x + w, y + h];
+  return `M ${a + r} ${b} L ${c - r} ${b} Q ${c} ${b} ${c} ${b + r} L ${c} ${d - r} Q ${c} ${d} ${c - r} ${d} L ${a + r} ${d} Q ${a} ${d} ${a} ${d - r} L ${a} ${b + r} Q ${a} ${b} ${a + r} ${b} Z`;
+}
+
+// Helper: ellipse centered at cx,cy with rx,ry
+function ell(cx: number, cy: number, rx: number, ry: number): string {
+  return `M ${cx - rx} ${cy} a ${rx} ${ry} 0 1 1 ${rx * 2} 0 a ${rx} ${ry} 0 1 1 ${-rx * 2} 0 Z`;
+}
 
 export const PARTS: Record<PartId, PartDef> = {
   cape_upper: {
     id: "cape_upper",
-    path: "M100 60 Q60 55 50 90 L45 180 Q70 170 100 165 Q130 170 155 180 L150 90 Q140 55 100 60Z",
+    path: "M 70 50 Q 100 42 130 50 L 135 95 Q 100 88 65 95 Z",
     pivotX: 100,
-    pivotY: 90,
+    pivotY: 75,
     fill: RED,
   },
-  cape_lower_left: {
-    id: "cape_lower_left",
-    path: "M55 175 L45 320 Q75 300 100 295 L100 175 Z",
+  cape_left: {
+    id: "cape_left",
+    path: "M 65 92 L 55 260 Q 85 250 100 245 L 100 95 Z",
     pivotX: 100,
-    pivotY: 200,
-    fill: RED_ACCENT,
+    pivotY: 180,
+    fill: RED_DARK,
   },
-  cape_lower_right: {
-    id: "cape_lower_right",
-    path: "M100 175 L100 295 Q125 300 155 320 L145 175 Z",
+  cape_right: {
+    id: "cape_right",
+    path: "M 100 95 L 100 245 Q 115 250 145 260 L 135 92 Z",
     pivotX: 100,
-    pivotY: 200,
-    fill: RED_ACCENT,
+    pivotY: 180,
+    fill: RED_DARK,
   },
   pelvis: {
     id: "pelvis",
-    path: "M75 235 Q70 250 75 265 L125 265 Q130 250 125 235 L100 225 Q85 228 75 235Z",
+    path: rr(72, 218, 56, 32, 6),
     pivotX: 100,
-    pivotY: 250,
+    pivotY: 234,
     fill: NAVY,
   },
   abdomen: {
     id: "abdomen",
-    path: "M80 180 Q75 200 80 220 L120 220 Q125 200 120 180 L100 165 Q90 168 80 180Z",
+    path: rr(76, 168, 48, 50, 6),
     pivotX: 100,
-    pivotY: 190,
+    pivotY: 193,
     fill: NAVY,
   },
-  chest: {
-    id: "chest",
-    path: "M85 95 Q80 130 85 165 L115 165 Q120 130 115 95 L100 88 Q92 90 85 95Z",
+  lower_chest: {
+    id: "lower_chest",
+    path: rr(74, 122, 52, 46, 8),
     pivotX: 100,
-    pivotY: 130,
+    pivotY: 145,
+    fill: NAVY_DARK,
+  },
+  upper_chest: {
+    id: "upper_chest",
+    path: rr(68, 72, 64, 50, 10),
+    pivotX: 100,
+    pivotY: 97,
     fill: NAVY_DARK,
   },
   neck: {
     id: "neck",
-    path: "M92 75 Q90 88 92 95 L108 95 Q110 88 108 75 L100 72 Z",
+    path: rr(88, 52, 24, 20, 4),
     pivotX: 100,
-    pivotY: 85,
+    pivotY: 62,
     fill: SKIN,
   },
   head: {
     id: "head",
-    path: "M100 25 Q130 22 145 45 Q155 70 148 95 Q142 105 100 108 Q58 105 52 95 Q45 70 55 45 Q70 22 100 25Z",
+    path: ell(100, 32, 38, 36),
     pivotX: 100,
-    pivotY: 75,
+    pivotY: 32,
     fill: SKIN,
   },
-  face: {
-    id: "face",
-    path: "M78 50 Q85 55 100 58 Q115 55 122 50 Q120 70 118 82 Q110 90 100 92 Q90 90 82 82 Q80 70 78 50Z",
+  mask: {
+    id: "mask",
+    path: "M 68 22 Q 100 16 132 22 Q 138 42 132 48 Q 100 54 68 48 Q 62 42 68 22 Z",
     pivotX: 100,
-    pivotY: 70,
-    fill: SKIN_SHADOW,
+    pivotY: 35,
+    fill: BLACK,
   },
   hair: {
     id: "hair",
-    path: "M100 28 Q125 25 138 42 Q145 58 135 75 Q120 85 100 88 Q80 85 65 75 Q55 58 62 42 Q75 25 100 28Z",
+    path: "M 64 8 Q 100 0 136 8 Q 142 28 136 36 Q 100 44 64 36 Q 58 28 64 8 Z",
     pivotX: 100,
-    pivotY: 58,
+    pivotY: 22,
     fill: BLACK,
   },
-  shoulder_left: {
-    id: "shoulder_left",
-    path: "M60 100 Q55 105 58 118 Q62 128 75 125 Q85 118 82 105 Q78 98 60 100Z",
-    pivotX: 75,
-    pivotY: 112,
+  left_shoulder: {
+    id: "left_shoulder",
+    path: rr(38, 88, 32, 28, 10),
+    pivotX: 70,
+    pivotY: 102,
     fill: NAVY_DARK,
   },
-  shoulder_right: {
-    id: "shoulder_right",
-    path: "M140 100 Q142 98 118 105 Q115 118 125 125 Q138 128 142 118 Q145 105 140 100Z",
-    pivotX: 125,
-    pivotY: 112,
+  right_shoulder: {
+    id: "right_shoulder",
+    path: rr(130, 88, 32, 28, 10),
+    pivotX: 130,
+    pivotY: 102,
     fill: NAVY_DARK,
   },
   left_upper_arm: {
     id: "left_upper_arm",
-    path: "M70 120 Q62 150 68 185 Q72 195 80 192 L82 122 Q76 118 70 120Z",
-    pivotX: 75,
-    pivotY: 155,
+    path: rr(48, 114, 22, 70, 8),
+    pivotX: 59,
+    pivotY: 149,
     fill: NAVY,
   },
   left_forearm: {
     id: "left_forearm",
-    path: "M78 188 Q72 220 78 255 Q82 265 88 262 L90 192 Q84 190 78 188Z",
-    pivotX: 82,
-    pivotY: 225,
+    path: rr(50, 182, 18, 72, 6),
+    pivotX: 59,
+    pivotY: 218,
     fill: NAVY,
   },
   left_hand: {
     id: "left_hand",
-    path: "M85 258 Q82 272 88 285 Q94 292 100 288 Q106 278 104 262 L90 255 Q86 258 85 258Z",
-    pivotX: 94,
-    pivotY: 275,
+    path: rr(52, 250, 16, 24, 6),
+    pivotX: 60,
+    pivotY: 262,
     fill: BLACK,
   },
   right_upper_arm: {
     id: "right_upper_arm",
-    path: "M130 120 Q132 118 128 192 L130 192 Q138 195 142 185 Q148 150 140 120 Q134 118 130 120Z",
-    pivotX: 125,
-    pivotY: 155,
+    path: rr(130, 114, 22, 70, 8),
+    pivotX: 141,
+    pivotY: 149,
     fill: NAVY,
   },
   right_forearm: {
     id: "right_forearm",
-    path: "M122 188 Q124 190 120 262 L112 265 Q110 278 116 288 Q122 292 128 285 Q134 272 130 258 L118 255 Q114 258 122 188Z",
-    pivotX: 118,
-    pivotY: 225,
+    path: rr(132, 182, 18, 72, 6),
+    pivotX: 141,
+    pivotY: 218,
     fill: NAVY,
   },
   right_hand: {
     id: "right_hand",
-    path: "M116 255 Q114 262 116 278 Q118 288 124 288 Q130 292 136 285 Q142 272 139 258 L125 262 Q120 258 116 255Z",
-    pivotX: 106,
-    pivotY: 275,
+    path: rr(132, 250, 16, 24, 6),
+    pivotX: 140,
+    pivotY: 262,
     fill: BLACK,
   },
   left_thigh: {
     id: "left_thigh",
-    path: "M82 265 Q75 290 78 330 Q80 345 88 342 L92 268 Q86 265 82 265Z",
-    pivotX: 85,
-    pivotY: 305,
+    path: rr(78, 248, 20, 72, 8),
+    pivotX: 88,
+    pivotY: 284,
     fill: NAVY,
   },
   left_shin: {
     id: "left_shin",
-    path: "M86 338 Q82 360 86 385 Q90 398 96 395 L98 342 Q92 338 86 338Z",
-    pivotX: 90,
-    pivotY: 365,
+    path: rr(80, 318, 16, 56, 6),
+    pivotX: 88,
+    pivotY: 346,
     fill: NAVY_DARK,
   },
   left_foot: {
     id: "left_foot",
-    path: "M92 392 Q88 405 94 418 Q100 422 108 418 Q114 405 110 392 L98 388 Z",
-    pivotX: 100,
-    pivotY: 408,
+    path: rr(74, 372, 24, 20, 4),
+    pivotX: 88,
+    pivotY: 384,
     fill: BLACK,
   },
   right_thigh: {
     id: "right_thigh",
-    path: "M118 265 Q122 265 116 268 L120 342 Q128 345 130 330 Q133 290 126 265 Q122 265 118 265Z",
-    pivotX: 115,
-    pivotY: 305,
+    path: rr(102, 248, 20, 72, 8),
+    pivotX: 112,
+    pivotY: 284,
     fill: NAVY,
   },
   right_shin: {
     id: "right_shin",
-    path: "M114 338 Q118 342 112 342 L116 395 Q122 398 126 385 Q130 360 126 338 Q122 335 114 338Z",
-    pivotX: 110,
-    pivotY: 365,
+    path: rr(104, 318, 16, 56, 6),
+    pivotX: 112,
+    pivotY: 346,
     fill: NAVY_DARK,
   },
   right_foot: {
     id: "right_foot",
-    path: "M108 392 Q104 405 108 418 Q114 422 122 418 Q128 405 126 392 L116 388 Q112 390 108 392Z",
-    pivotX: 100,
-    pivotY: 408,
+    path: rr(102, 372, 24, 20, 4),
+    pivotX: 112,
+    pivotY: 384,
     fill: BLACK,
   },
 };

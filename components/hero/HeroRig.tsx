@@ -33,20 +33,21 @@ function getPartTransform(
 
   switch (partId) {
     case "head":
-    case "face":
+    case "mask":
     case "hair":
       return `${t(pivotX, pivotY)} ${r(pose.headRot)} ${unpiv}`;
     case "neck":
       return `${t(pivotX, pivotY)} ${r(pose.neckRot)} ${unpiv}`;
-    case "chest":
+    case "upper_chest":
+    case "lower_chest":
       return `${t(pose.weightShiftX, pose.chestY)} ${t(pivotX, pivotY)} ${s(pose.chestScale)} ${r(pose.torsoRot)} ${unpiv}`;
     case "abdomen":
       return `${t(pose.weightShiftX, 0)} ${t(pivotX, pivotY)} ${r(pose.abdomenRot)} ${unpiv}`;
     case "pelvis":
       return `${t(pose.weightShiftX, 0)} ${t(pivotX, pivotY)} ${r(pose.pelvisRot)} ${unpiv}`;
     case "cape_upper":
-    case "cape_lower_left":
-    case "cape_lower_right":
+    case "cape_left":
+    case "cape_right":
       return `${t(pivotX, pivotY)} ${r(pose.capeRot)} ${unpiv}`;
     case "left_upper_arm":
       return `${t(pivotX, pivotY)} ${r(pose.leftArmRot)} ${unpiv}`;
@@ -72,8 +73,8 @@ function getPartTransform(
       return `${t(pivotX, pivotY)} ${r(pose.rightShinRot + pose.rightThighRot)} ${unpiv}`;
     case "right_foot":
       return `${t(pivotX, pivotY)} ${r(pose.rightFootRot + pose.rightShinRot + pose.rightThighRot)} ${unpiv}`;
-    case "shoulder_left":
-    case "shoulder_right":
+    case "left_shoulder":
+    case "right_shoulder":
       return `${t(pose.weightShiftX, 0)} ${t(pivotX, pivotY)} ${r(pose.torsoRot)} ${unpiv}`;
     default:
       return `${t(pose.weightShiftX, 0)}`;
