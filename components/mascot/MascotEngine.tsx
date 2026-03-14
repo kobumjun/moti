@@ -171,9 +171,10 @@ export default function MascotEngine() {
         };
       }
 
-      const moveDist = WALK_SPEED * dt;
-      let newX = s.x + vx.current * dt;
-      let newY = s.y + vy.current * dt;
+      const easeOut = Math.min(1, dist / 50);
+      const moveDist = WALK_SPEED * dt * easeOut;
+      let newX = s.x + vx.current * dt * easeOut;
+      let newY = s.y + vy.current * dt * easeOut;
 
       if (Math.hypot(newX - targetX.current, newY - targetY.current) < moveDist) {
         vx.current = 0;
@@ -544,7 +545,7 @@ export default function MascotEngine() {
       aria-hidden
     >
       <div
-        className="absolute flex flex-col items-center"
+        className="absolute flex flex-col items-center bg-transparent"
         style={{
           left: state.x,
           top: state.y,
@@ -552,6 +553,7 @@ export default function MascotEngine() {
           height: CHAR_HEIGHT,
           transform: `translate(-50%, -100%)`,
           willChange: state.action === "walk" ? "left, top" : "auto",
+          transition: state.action === "walk" ? "none" : "left 0.15s ease-out, top 0.15s ease-out",
         }}
       >
         <AnimatePresence>
