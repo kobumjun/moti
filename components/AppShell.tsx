@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { dispatchCharacterEvent } from "./character";
 import { createClient } from "@/lib/supabase/client";
-import { CharacterUI } from "./character";
+import { MascotEngine } from "./mascot";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -53,6 +54,7 @@ export default function AppShell({ user, children }: AppShellProps) {
                   onClick={() => {
                     setLang("en");
                     setDropdownOpen(false);
+                    dispatchCharacterEvent("language_changed", { lang: "en" });
                   }}
                   className={`block w-full text-left px-4 py-2 text-sm hover:bg-moti-border/30 ${
                     lang === "en" ? "text-moti-accent" : "text-moti-text"
@@ -64,6 +66,7 @@ export default function AppShell({ user, children }: AppShellProps) {
                   onClick={() => {
                     setLang("ko");
                     setDropdownOpen(false);
+                    dispatchCharacterEvent("language_changed", { lang: "ko" });
                   }}
                   className={`block w-full text-left px-4 py-2 text-sm hover:bg-moti-border/30 ${
                     lang === "ko" ? "text-moti-accent" : "text-moti-text"
@@ -94,7 +97,7 @@ export default function AppShell({ user, children }: AppShellProps) {
       </header>
 
       {children}
-      <CharacterUI />
+      <MascotEngine />
     </div>
   );
 }

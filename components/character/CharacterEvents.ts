@@ -11,19 +11,21 @@ export type CharacterEventType =
   | "button_hover"
   | "idle"
   | "scroll"
-  | "text_change";
+  | "text_change"
+  | "language_changed";
 
 export interface CharacterEventDetail {
   type: CharacterEventType;
   title?: string;
   content?: string;
+  lang?: "en" | "ko";
 }
 
 const EVENT_NAME = "character:event";
 
 export function dispatchCharacterEvent(
   type: CharacterEventType,
-  extra?: { title?: string; content?: string }
+  extra?: { title?: string; content?: string; lang?: "en" | "ko" }
 ): void {
   if (typeof window === "undefined") return;
   window.dispatchEvent(
