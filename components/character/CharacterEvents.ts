@@ -12,6 +12,9 @@ export type CharacterEventType =
   | "idle"
   | "scroll"
   | "text_change"
+  | "typing_started"
+  | "typing_stopped"
+  | "page_selected"
   | "language_changed";
 
 export interface CharacterEventDetail {

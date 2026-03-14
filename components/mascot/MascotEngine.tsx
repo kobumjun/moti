@@ -12,13 +12,24 @@ import { getZone, clampToSafe, WALK_SPEED } from "./mascotZones";
 import { getPhrase } from "./mascotDialogue";
 import type { DialogueKey } from "./mascotDialogue";
 import type { ZoneKey } from "./mascotActions";
+import { getEventReaction } from "./mascotActions";
+import { pickVariation } from "./mascotMotion";
+import type { MotionVariation } from "./mascotState";
+import type { MascotMood } from "./mascotState";
+import MascotRenderer from "./MascotRenderer";
 
-const CHAR_WIDTH = 72;
-const CHAR_HEIGHT = 110;
+const CHAR_WIDTH = 100;
+const CHAR_HEIGHT = 150;
 const ARRIVAL_THRESHOLD = 8;
 const WALK_FRAME_MS = 120;
 const IDLE_DIALOGUE_MIN = 30000;
 const IDLE_DIALOGUE_MAX = 90000;
+
+function mapEventType(t: string): Parameters<typeof getEventReaction>[0] {
+  if (t === "language_changed") return "lang_changed";
+  if (t === "page_create" || t === "page_delete" || t === "save_click" || t === "button_hover" || t === "idle" || t === "text_change" || t === "page_selected" || t === "typing_started" || t === "typing_stopped") return t as Parameters<typeof getEventReaction>[0];
+  return "page_load";
+}
 
 export interface MascotState {
   x: number;
@@ -28,10 +39,23 @@ export interface MascotState {
   visible: boolean;
   action: string;
   walkFrame: number;
-  /** For transform-based animation */
-  headTilt: number;
-  breathing: number;
+  mood: MascotMood;
+  variation: MotionVariation;
 }
+
+const DEFAULT_VARIATION: MotionVariation = {
+  speed: 1,
+  duration: 1,
+  breathingStrength: 1,
+  headTilt: 0,
+  armEmphasis: 1,
+  pauseTiming: 1,
+  mirrored: false,
+  torsoSway: 1,
+  shoulderLift: 1,
+  stepAmplitude: 1,
+  weightShift: 1,
+};
 
 export default function MascotEngine() {
   const { lang } = useLanguage();
@@ -43,8 +67,8 @@ export default function MascotEngine() {
     visible: false,
     action: "idleBreathing",
     walkFrame: 0,
-    headTilt: 0,
-    breathing: 1,
+    mood: "idle",
+    variation: DEFAULT_VARIATION,
   });
 
   const vx = useRef(0);
@@ -88,7 +112,14 @@ export default function MascotEngine() {
 
       if (dist < ARRIVAL_THRESHOLD) {
         posRef.current = { x: t.x, y: t.y };
-        setState((s) => ({ ...s, x: t.x, y: t.y, action: "idleBreathing", walkFrame: 0 }));
+        setState((s) => ({
+          ...s,
+          x: t.x,
+          y: t.y,
+          action: "idleBreathing",
+          walkFrame: 0,
+          variation: pickVariation("idleBreathing"),
+        }));
         cb?.();
         return;
       }
@@ -102,6 +133,8 @@ export default function MascotEngine() {
         action: "walk",
         facing: dirX >= 0 ? "right" : "left",
         walkFrame: 0,
+        mood: "walking",
+        variation: pickVariation("walk"),
       }));
       walkFrameAcc.current = 0;
     },
@@ -133,6 +166,8 @@ export default function MascotEngine() {
           y: targetY.current,
           action: "idleBreathing",
           walkFrame: 0,
+          mood: "idle",
+          variation: pickVariation("idleBreathing"),
         };
       }
 
@@ -153,6 +188,8 @@ export default function MascotEngine() {
           y: targetY.current,
           action: "idleBreathing",
           walkFrame: 0,
+          mood: "idle",
+          variation: pickVariation("idleBreathing"),
         };
       }
 
@@ -160,7 +197,7 @@ export default function MascotEngine() {
       walkFrameAcc.current += dt * 1000;
       const newFrame =
         walkFrameAcc.current >= WALK_FRAME_MS
-          ? ((s.walkFrame + 1) % 4)
+          ? (s.walkFrame + 1) % 4
           : s.walkFrame;
       if (walkFrameAcc.current >= WALK_FRAME_MS) walkFrameAcc.current = 0;
 
@@ -191,7 +228,7 @@ export default function MascotEngine() {
         { zone: "editorCenter", action: "walk", duration: 0 },
         { zone: "editorCenter", action: "idleBreathing", duration: 2800 },
         { zone: "saveArea", action: "walk", duration: 0 },
-        { zone: "saveArea", action: "point", duration: 2200 },
+        { zone: "saveArea", action: "point", speech: "page_selected", duration: 2200 },
         { zone: "bottomRight", action: "walk", duration: 0 },
         { zone: "bottomRight", action: "idleBreathing", duration: 3000 },
       ],
@@ -222,12 +259,15 @@ export default function MascotEngine() {
     const dist = Math.hypot(t.x - p.x, t.y - p.y);
 
     const doPose = () => {
+      const variation = pickVariation(step.action as import("./mascotState").BaseAction);
       setState((s) => ({
         ...s,
         x: t.x,
         y: t.y,
         action: step.action,
         speech: step.speech ? getPhrase(lang, step.speech) : null,
+        mood: step.action === "idleBreathing" ? "idle" : "watching",
+        variation,
       }));
       if (step.speech) {
         const t2 = setTimeout(() => setState((s) => ({ ...s, speech: null })), 2200);
@@ -273,12 +313,16 @@ export default function MascotEngine() {
             ...s,
             action: "talk",
             speech: getPhrase(lang, "idle"),
+            variation: pickVariation("talk"),
           };
         }
         return s;
       });
       const t2 = setTimeout(
-        () => setState((s) => (s.speech ? { ...s, speech: null, action: "idleBreathing" } : s)),
+        () =>
+          setState((s) =>
+            s.speech ? { ...s, speech: null, action: "idleBreathing", variation: pickVariation("idleBreathing") } : s
+          ),
         2400
       );
       timers.current.push(t2);
@@ -296,6 +340,7 @@ export default function MascotEngine() {
       x: t.x,
       y: t.y,
       speech: getPhrase(lang, "intro"),
+      variation: pickVariation("idleBreathing"),
     }));
     vx.current = 0;
     vy.current = 0;
@@ -314,16 +359,27 @@ export default function MascotEngine() {
         timers.current = [];
       }
 
+      const evType = mapEventType(d.type);
+      const reaction = getEventReaction(evType);
+
       if (d.type === "page_create") {
         walkTo("pageList", () => {
           setState((s) => ({
             ...s,
-            action: "heroPose",
+            action: reaction.action,
+            mood: reaction.mood,
             speech: getPhrase(lang, "page_create"),
             facing: "right",
+            variation: reaction.variation,
           }));
           const tt = setTimeout(() => {
-            setState((s) => ({ ...s, speech: null, action: "idleBreathing" }));
+            setState((s) => ({
+              ...s,
+              speech: null,
+              action: "idleBreathing",
+              mood: "idle",
+              variation: pickVariation("idleBreathing"),
+            }));
             runFlow();
           }, 2200);
           timers.current.push(tt);
@@ -333,10 +389,22 @@ export default function MascotEngine() {
       if (d.type === "save_click") {
         setState((s) => ({
           ...s,
-          action: "celebrate",
+          action: reaction.action,
+          mood: reaction.mood,
           speech: getPhrase(lang, "save_click"),
+          variation: reaction.variation,
         }));
-        const tt = setTimeout(() => setState((s) => ({ ...s, speech: null, action: "idleBreathing" })), 2000);
+        const tt = setTimeout(
+          () =>
+            setState((s) => ({
+              ...s,
+              speech: null,
+              action: "idleBreathing",
+              mood: "idle",
+              variation: pickVariation("idleBreathing"),
+            })),
+          2000
+        );
         timers.current.push(tt);
         return;
       }
@@ -344,12 +412,20 @@ export default function MascotEngine() {
         walkTo("saveArea", () => {
           setState((s) => ({
             ...s,
-            action: "point",
+            action: reaction.action,
+            mood: reaction.mood,
             speech: getPhrase(lang, "button_hover"),
             facing: "right",
+            variation: reaction.variation,
           }));
           const tt = setTimeout(() => {
-            setState((s) => ({ ...s, speech: null, action: "idleBreathing" }));
+            setState((s) => ({
+              ...s,
+              speech: null,
+              action: "idleBreathing",
+              mood: "idle",
+              variation: pickVariation("idleBreathing"),
+            }));
             runFlow();
           }, 1800);
           timers.current.push(tt);
@@ -360,10 +436,22 @@ export default function MascotEngine() {
         const phraseLang = d.lang ?? lang;
         setState((s) => ({
           ...s,
-          action: "wave",
+          action: reaction.action,
+          mood: reaction.mood,
           speech: getPhrase(phraseLang, "lang_changed"),
+          variation: reaction.variation,
         }));
-        const tt = setTimeout(() => setState((s) => ({ ...s, speech: null, action: "idleBreathing" })), 1800);
+        const tt = setTimeout(
+          () =>
+            setState((s) => ({
+              ...s,
+              speech: null,
+              action: "idleBreathing",
+              mood: "idle",
+              variation: pickVariation("idleBreathing"),
+            })),
+          1800
+        );
         timers.current.push(tt);
         return;
       }
@@ -371,16 +459,66 @@ export default function MascotEngine() {
         walkTo("logoutArea", () => {
           setState((s) => ({
             ...s,
-            action: "wave",
+            action: reaction.action,
+            mood: reaction.mood,
             speech: getPhrase(lang, "near_logout"),
             facing: "left",
+            variation: reaction.variation,
           }));
           const tt = setTimeout(() => {
-            setState((s) => ({ ...s, speech: null, action: "idleBreathing" }));
+            setState((s) => ({
+              ...s,
+              speech: null,
+              action: "idleBreathing",
+              mood: "idle",
+              variation: pickVariation("idleBreathing"),
+            }));
             runFlow();
           }, 2800);
           timers.current.push(tt);
         });
+        return;
+      }
+      if (d.type === "page_selected") {
+        setState((s) => ({
+          ...s,
+          action: reaction.action,
+          mood: reaction.mood,
+          speech: getPhrase(lang, "page_selected"),
+          variation: reaction.variation,
+        }));
+        const tt = setTimeout(
+          () =>
+            setState((s) => ({
+              ...s,
+              speech: null,
+              action: "idleBreathing",
+              mood: "idle",
+              variation: pickVariation("idleBreathing"),
+            })),
+          1500
+        );
+        timers.current.push(tt);
+        return;
+      }
+      if (d.type === "text_change" || d.type === "typing_started" || d.type === "typing_stopped") {
+        setState((s) => ({
+          ...s,
+          action: reaction.action,
+          mood: reaction.mood,
+          variation: reaction.variation,
+        }));
+        const tt = setTimeout(
+          () =>
+            setState((s) => ({
+              ...s,
+              action: "idleBreathing",
+              mood: "idle",
+              variation: pickVariation("idleBreathing"),
+            })),
+          reaction.duration
+        );
+        timers.current.push(tt);
       }
     });
 
@@ -446,18 +584,13 @@ export default function MascotEngine() {
           )}
         </AnimatePresence>
 
-        <div
-          className="relative w-full h-full"
-          style={{
-            transform: state.facing === "left" ? "scaleX(-1)" : "scaleX(1)",
-          }}
-        >
-          {/* ONLY mascot source: file-2.svg from public/mascot/ */}
-          <img
-            src="/mascot/file-2.svg"
-            alt=""
-            className="w-full h-full object-contain drop-shadow-xl"
-            style={{ objectPosition: "center bottom" }}
+        <div className="relative w-full h-full overflow-visible">
+          <MascotRenderer
+            facing={state.facing}
+            action={state.action}
+            walkFrame={state.walkFrame}
+            variation={state.variation}
+            mood={state.mood}
           />
         </div>
       </div>

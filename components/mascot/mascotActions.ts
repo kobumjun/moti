@@ -1,5 +1,5 @@
 /**
- * mascotActions - base actions, event reactions
+ * mascotActions - base actions, event reactions, mood-aware selection
  */
 
 import type { BaseAction, MascotMood, MotionVariation } from "./mascotState";
@@ -13,6 +13,8 @@ export type MascotEventType =
   | "button_hover"
   | "idle"
   | "text_change"
+  | "typing_started"
+  | "typing_stopped"
   | "page_selected"
   | "lang_changed";
 
@@ -34,14 +36,29 @@ const IDLE_ACTIONS: BaseAction[] = [
   "idleBreathing",
   "lookLeft",
   "lookRight",
+  "lookUp",
+  "lookDown",
   "nod",
+  "shakeHead",
   "stretch",
+  "shoulderRoll",
   "scratchHead",
   "handsOnWaist",
   "crossArms",
-  "lean",
+  "leanLeft",
+  "leanRight",
   "think",
   "lookAroundSuspicious",
+  "glanceAround",
+  "chinTouch",
+  "neckLoosen",
+  "capeAdjust",
+  "proudStance",
+  "tiredStance",
+  "warmUp",
+  "subtleReaction",
+  "slightCrouch",
+  "recoverNeutral",
 ];
 
 const lastUsedActions: BaseAction[] = [];
@@ -62,7 +79,7 @@ function getVariation(action: BaseAction): MotionVariation {
 
 export function getEventReaction(
   event: MascotEventType,
-  recentVariations: MotionVariation[] = []
+  _recentVariations: MotionVariation[] = []
 ): ActionResult {
   switch (event) {
     case "save_click":
@@ -144,6 +161,26 @@ export function getEventReaction(
         walkFirst: false,
         duration: 1200,
         variation: getVariation("clap"),
+      };
+    case "typing_started":
+      return {
+        action: "inspect",
+        mood: "focused",
+        zone: "editorCenter",
+        speak: false,
+        walkFirst: false,
+        duration: 1500,
+        variation: getVariation("inspect"),
+      };
+    case "typing_stopped":
+      return {
+        action: "recoverNeutral",
+        mood: "idle",
+        zone: "editorCenter",
+        speak: false,
+        walkFirst: false,
+        duration: 1000,
+        variation: getVariation("recoverNeutral"),
       };
     default:
       return getIdleAction("center");

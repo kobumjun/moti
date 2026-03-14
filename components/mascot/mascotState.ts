@@ -1,18 +1,20 @@
 /**
- * mascotState - state machine, moods, action types
+ * mascotState - state machine, moods, action types, body transforms
+ * 35+ base actions × variation system → 300+ effective motion variations
  */
 
 export type MascotMood =
   | "idle"
   | "walking"
-  | "watching"
-  | "excited"
-  | "bored"
   | "proud"
+  | "bored"
+  | "excited"
   | "thinking"
-  | "reacting"
   | "tired"
-  | "playful";
+  | "playful"
+  | "focused"
+  | "watching"
+  | "reacting";
 
 export type BaseAction =
   | "idleBreathing"
@@ -20,40 +22,57 @@ export type BaseAction =
   | "lookLeft"
   | "lookRight"
   | "lookUp"
+  | "lookDown"
   | "nod"
   | "shakeHead"
   | "walk"
   | "stretch"
+  | "shoulderRoll"
   | "yawn"
   | "crossArms"
+  | "handsOnWaist"
   | "heroPose"
+  | "inspect"
+  | "think"
+  | "chinTouch"
+  | "scratchHead"
   | "point"
   | "clap"
   | "wave"
-  | "scratchHead"
-  | "think"
-  | "lean"
-  | "inspect"
-  | "celebrate"
+  | "smallJump"
+  | "stepBack"
+  | "stepForward"
+  | "leanLeft"
+  | "leanRight"
   | "proudStance"
   | "tiredStance"
   | "shrug"
-  | "facepalm"
-  | "smallJump"
-  | "crouch"
   | "peekFromEdge"
   | "lookAroundSuspicious"
-  | "handsOnWaist"
-  | "warmUp";
+  | "readyStance"
+  | "warmUp"
+  | "neckLoosen"
+  | "glanceAround"
+  | "subtleReaction"
+  | "slightCrouch"
+  | "recoverNeutral"
+  | "capeAdjust"
+  | "talk"
+  | "facepalm"
+  | "celebrate";
 
 export interface MotionVariation {
-  speed: number;      // 0.7 - 1.3
-  duration: number;   // 0.8 - 1.5x base
+  speed: number;           // 0.7 - 1.3
+  duration: number;        // 0.85 - 1.25x base
   breathingStrength: number;  // 0.5 - 1.2
-  headTilt: number;   // -8 to 8 deg
-  armEmphasis: number;  // 0.5 - 1.2
-  pauseTiming: number;  // 0.8 - 1.2x
-  mirrored: boolean;   // left/right
+  headTilt: number;        // -10 to 10 deg
+  armEmphasis: number;     // 0.5 - 1.2
+  pauseTiming: number;     // 0.8 - 1.2x
+  mirrored: boolean;       // left/right
+  torsoSway: number;       // 0.5 - 1.2
+  shoulderLift: number;    // 0.5 - 1.1
+  stepAmplitude: number;   // 0.8 - 1.2 for walk bounce
+  weightShift: number;     // 0.6 - 1.0
 }
 
 export interface MascotPoseState {
@@ -62,7 +81,6 @@ export interface MascotPoseState {
   variation: MotionVariation;
   walkFrame: number;
   facing: "left" | "right";
-  /** Transform values for body parts */
   transforms: BodyTransforms;
 }
 

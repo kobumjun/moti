@@ -130,6 +130,11 @@ export default function AppContent({ initialPages }: AppContentProps) {
     [supabase, refreshPages]
   );
 
+  const handleSelectPage = useCallback((page: Page) => {
+    setSelectedPage(page);
+    dispatchCharacterEvent("page_selected");
+  }, []);
+
   const handleDeletePage = useCallback(
     async (id: string) => {
       if (!confirm(t("deleteConfirm"))) return;
@@ -146,7 +151,7 @@ export default function AppContent({ initialPages }: AppContentProps) {
       <Sidebar
         pages={pages}
         selectedId={selectedPage?.id ?? null}
-        onSelect={setSelectedPage}
+        onSelect={handleSelectPage}
         onCreatePage={handleCreatePage}
         onCreateSubpage={handleCreateSubpage}
       />

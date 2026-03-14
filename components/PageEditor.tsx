@@ -86,6 +86,8 @@ export default function PageEditor({
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
+        onFocus={() => dispatchCharacterEvent("typing_started")}
+        onBlur={() => dispatchCharacterEvent("typing_stopped")}
         placeholder={t("contentPlaceholder")}
         className="w-full min-h-[400px] p-4 rounded-xl bg-moti-surface border border-moti-border resize-y outline-none focus:ring-2 focus:ring-moti-accent/50 text-moti-text placeholder:text-moti-textDim leading-relaxed"
       />
