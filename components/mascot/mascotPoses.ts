@@ -1,6 +1,6 @@
 /**
- * mascotPoses - pose values for file-2.svg wrapper transforms
- * NO vertical bounce. Grounded: head/cape rhythm, subtle weight shift (translateX).
+ * mascotPoses - pose values for HeroRig per-region transforms.
+ * NO vertical bounce. Leg-driven locomotion: alternating legs, arm swing, hip shift, head/cape.
  */
 
 import type { BaseAction } from "./mascotState";

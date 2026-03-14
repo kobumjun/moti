@@ -1,15 +1,15 @@
 "use client";
 
 /**
- * MascotRenderer - Uses FULL ORIGINAL file-2.svg as the only mascot visual.
- * Motion engine drives wrapper transforms. NO vertical bounce. ONLY file-2.svg.
- * NO reconstructed character. NO fallback. ONLY file-2.svg.
+ * MascotRenderer - Uses HeroRig (908 SVG parts from /mascot/hero-parts/) as the only mascot visual.
+ * Motion engine drives per-region transforms. Leg-driven locomotion. NO file-2.svg, NO fallback.
  */
 
 import { useEffect, useState } from "react";
-import { getWalkPose, getPoseForAction, type PoseValues } from "./mascotPoses";
+import { getWalkPose, getPoseForAction } from "./mascotPoses";
 import type { MotionVariation } from "./mascotState";
 import type { BaseAction } from "./mascotState";
+import HeroRig from "./HeroRig";
 
 interface MascotRendererProps {
   facing: "left" | "right";
@@ -41,19 +41,15 @@ export default function MascotRenderer({
   const moodMod = mood === "excited" ? 1.15 : mood === "tired" ? 0.85 : 1;
   const amp = variation.stepAmplitude * moodMod;
 
-  let pose: PoseValues;
-
-  if (isWalking) {
-    pose = getWalkPose(walkFrame, amp);
-  } else {
-    pose = getPoseForAction(action as BaseAction, phase, {
-      headTilt: variation.headTilt,
-      breathingStrength: variation.breathingStrength * moodMod,
-      torsoSway: variation.torsoSway,
-      armEmphasis: variation.armEmphasis,
-      mirrored: variation.mirrored,
-    });
-  }
+  const pose = isWalking
+    ? getWalkPose(walkFrame, amp)
+    : getPoseForAction(action as BaseAction, phase, {
+        headTilt: variation.headTilt,
+        breathingStrength: variation.breathingStrength * moodMod,
+        torsoSway: variation.torsoSway,
+        armEmphasis: variation.armEmphasis,
+        mirrored: variation.mirrored,
+      });
 
   return (
     <div
@@ -62,25 +58,8 @@ export default function MascotRenderer({
         filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.12))",
       }}
     >
-      <div
-        className="relative w-full h-full flex items-end justify-center"
-        style={{
-          transform: [
-            `scaleX(${facing === "left" ? -1 : 1})`,
-            `translate(${pose.weightShiftX * (facing === "left" ? -1 : 1)}px, ${pose.torsoY}px)`,
-            `rotate(${pose.headRot}deg)`,
-            `rotate(${pose.capeRot}deg)`,
-            `scale(${pose.breathScale})`,
-          ].join(" "),
-          transformOrigin: "center bottom",
-        }}
-      >
-        <img
-          src="/mascot/file-2.svg"
-          alt=""
-          className="w-full h-full object-contain"
-          style={{ objectPosition: "center bottom" }}
-        />
+      <div className="relative w-full h-full flex items-end justify-center">
+        <HeroRig pose={pose} facing={facing} />
       </div>
     </div>
   );
