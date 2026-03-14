@@ -67,10 +67,29 @@ export const PARTS_DRAW_ORDER: PartId[] = [
 export interface PartDef {
   id: PartId;
   path: string;
+  /** Pivot at joint: shoulder/elbow/wrist for arms, hip/knee/ankle for legs, neck for head */
   pivotX: number;
   pivotY: number;
   fill: string;
 }
+
+/** Joint positions for hierarchy: child pivot = parent's end joint */
+export const JOINTS = {
+  torso: { x: 70, y: 182 },
+  head: { x: 70, y: 88 },
+  leftShoulder: { x: 34, y: 98 },
+  leftElbow: { x: 35, y: 142 },
+  leftWrist: { x: 35, y: 180 },
+  rightShoulder: { x: 106, y: 98 },
+  rightElbow: { x: 105, y: 142 },
+  rightWrist: { x: 105, y: 180 },
+  leftHip: { x: 63, y: 192 },
+  leftKnee: { x: 63, y: 238 },
+  leftAnkle: { x: 63, y: 280 },
+  rightHip: { x: 77, y: 192 },
+  rightKnee: { x: 77, y: 238 },
+  rightAnkle: { x: 77, y: 280 },
+} as const;
 
 const NAVY = "#2a3f5f";
 const NAVY_DARK = "#1a2d45";
@@ -94,14 +113,14 @@ export const PARTS: Record<PartId, PartDef> = {
     id: "head",
     path: ell(70, 38, 28, 32),
     pivotX: 70,
-    pivotY: 38,
+    pivotY: 70,
     fill: NAVY,
   },
   visor: {
     id: "visor",
     path: rr(50, 28, 40, 12, 6),
     pivotX: 70,
-    pivotY: 34,
+    pivotY: 70,
     fill: HIGHLIGHT,
   },
   neck: {
@@ -115,7 +134,7 @@ export const PARTS: Record<PartId, PartDef> = {
     id: "upper_torso",
     path: rr(52, 86, 36, 48, 10),
     pivotX: 70,
-    pivotY: 110,
+    pivotY: 128,
     fill: BLUE,
   },
   lower_torso: {
@@ -136,84 +155,84 @@ export const PARTS: Record<PartId, PartDef> = {
     id: "left_upper_arm",
     path: rr(28, 98, 12, 44, 6),
     pivotX: 34,
-    pivotY: 120,
+    pivotY: 98,
     fill: BLUE,
   },
   left_forearm: {
     id: "left_forearm",
     path: rr(30, 140, 10, 40, 5),
     pivotX: 35,
-    pivotY: 160,
+    pivotY: 140,
     fill: NAVY,
   },
   left_hand: {
     id: "left_hand",
     path: rr(28, 178, 14, 16, 6),
     pivotX: 35,
-    pivotY: 186,
+    pivotY: 178,
     fill: ACCENT,
   },
   right_upper_arm: {
     id: "right_upper_arm",
     path: rr(100, 98, 12, 44, 6),
     pivotX: 106,
-    pivotY: 120,
+    pivotY: 98,
     fill: BLUE,
   },
   right_forearm: {
     id: "right_forearm",
     path: rr(100, 140, 10, 40, 5),
     pivotX: 105,
-    pivotY: 160,
+    pivotY: 140,
     fill: NAVY,
   },
   right_hand: {
     id: "right_hand",
     path: rr(98, 178, 14, 16, 6),
     pivotX: 105,
-    pivotY: 186,
+    pivotY: 178,
     fill: ACCENT,
   },
   left_thigh: {
     id: "left_thigh",
     path: rr(58, 192, 10, 46, 6),
     pivotX: 63,
-    pivotY: 215,
+    pivotY: 192,
     fill: BLUE,
   },
   left_shin: {
     id: "left_shin",
     path: rr(60, 236, 8, 44, 5),
     pivotX: 63,
-    pivotY: 260,
+    pivotY: 236,
     fill: NAVY,
   },
   left_foot: {
     id: "left_foot",
     path: rr(54, 278, 18, 12, 4),
     pivotX: 63,
-    pivotY: 286,
+    pivotY: 278,
     fill: PURPLE,
   },
   right_thigh: {
     id: "right_thigh",
     path: rr(72, 192, 10, 46, 6),
     pivotX: 77,
-    pivotY: 215,
+    pivotY: 192,
     fill: BLUE,
   },
   right_shin: {
     id: "right_shin",
     path: rr(72, 236, 8, 44, 5),
     pivotX: 77,
-    pivotY: 260,
+    pivotY: 236,
     fill: NAVY,
   },
   right_foot: {
     id: "right_foot",
     path: rr(68, 278, 18, 12, 4),
     pivotX: 77,
-    pivotY: 286,
+    pivotY: 278,
     fill: PURPLE,
   },
 };
