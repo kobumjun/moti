@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { dispatchCharacterEvent } from "./character";
 import { createClient } from "@/lib/supabase/client";
+import { MascotEngine } from "./mascot";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -96,6 +97,7 @@ export default function AppShell({ user, children }: AppShellProps) {
       </header>
 
       {children}
+      <MascotEngine />
     </div>
   );
 }
