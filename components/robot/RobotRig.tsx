@@ -35,8 +35,6 @@ function getTransform(partId: string, pose: PoseValues, facing: "left" | "right"
     case "upper_torso":
     case "lower_torso":
       return `${t(pose.weightShiftX, pose.torsoY)} ${piv} ${s(pose.torsoScale)} ${r(pose.torsoRot)} ${unpiv}`;
-    case "back_panel":
-      return `${t(pose.weightShiftX, 0)} ${piv} ${r(pose.backPanelRot)} ${unpiv}`;
     case "pelvis":
       return `${t(pose.weightShiftX, 0)} ${piv} ${r(pose.pelvisRot)} ${unpiv}`;
     case "left_upper_arm":

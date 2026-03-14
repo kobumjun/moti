@@ -1,20 +1,35 @@
 /**
- * robotRigParts - 20 clean parts for a simple premium humanoid robot mascot.
- * Normal humanoid silhouette: 1 head, 2 arms, 2 legs, 1 torso.
- * Dark navy / blue / purple palette. Animation-friendly.
+ * robotRigParts - Friendly humanoid robot mascot
+ *
+ * STRICT STRUCTURE (enforced by part list):
+ * - 1 head (head + visor as one unit)
+ * - 1 neck
+ * - 1 torso (upper_torso + lower_torso + pelvis)
+ * - 2 arms: left (upper_arm, forearm, hand) + right (upper_arm, forearm, hand)
+ * - 2 legs: left (thigh, shin, foot) + right (thigh, shin, foot)
+ *
+ * TOTAL: 18 parts. NO extra arms. NO extra legs. NO spider/insect structure.
  */
 
-export const VIEW_WIDTH = 160;
-export const VIEW_HEIGHT = 360;
+export const VIEW_WIDTH = 140;
+export const VIEW_HEIGHT = 340;
+
+// Limb counts - these are the ONLY arm/leg parts. Do not add more.
+const LEFT_ARM_PARTS = ["left_upper_arm", "left_forearm", "left_hand"] as const;
+const RIGHT_ARM_PARTS = ["right_upper_arm", "right_forearm", "right_hand"] as const;
+const LEFT_LEG_PARTS = ["left_thigh", "left_shin", "left_foot"] as const;
+const RIGHT_LEG_PARTS = ["right_thigh", "right_shin", "right_foot"] as const;
+
+export const ARM_COUNT = 2;
+export const LEG_COUNT = 2;
 
 export type PartId =
-  | "back_panel"
-  | "pelvis"
-  | "lower_torso"
-  | "upper_torso"
-  | "neck"
   | "head"
   | "visor"
+  | "neck"
+  | "upper_torso"
+  | "lower_torso"
+  | "pelvis"
   | "left_upper_arm"
   | "left_forearm"
   | "left_hand"
@@ -29,7 +44,6 @@ export type PartId =
   | "right_foot";
 
 export const PARTS_DRAW_ORDER: PartId[] = [
-  "back_panel",
   "left_thigh",
   "right_thigh",
   "left_shin",
@@ -58,15 +72,17 @@ export interface PartDef {
   fill: string;
 }
 
-const NAVY = "#1e3a5f";
-const NAVY_DARK = "#0f2744";
-const BLUE = "#2d4a6f";
-const PURPLE = "#5c6bc0";
-const PURPLE_LIGHT = "#7e57c2";
+const NAVY = "#2a3f5f";
+const NAVY_DARK = "#1a2d45";
+const BLUE = "#3d5a80";
+const PURPLE = "#6b7fd7";
+const ACCENT = "#8b9dc3";
+const HIGHLIGHT = "#a8c5e8";
 
 function rr(x: number, y: number, w: number, h: number, r: number): string {
+  const rad = Math.min(r, w / 2, h / 2);
   const [a, b, c, d] = [x, y, x + w, y + h];
-  return `M ${a + r} ${b} L ${c - r} ${b} Q ${c} ${b} ${c} ${b + r} L ${c} ${d - r} Q ${c} ${d} ${c - r} ${d} L ${a + r} ${d} Q ${a} ${d} ${a} ${d - r} L ${a} ${b + r} Q ${a} ${b} ${a + r} ${b} Z`;
+  return `M ${a + rad} ${b} L ${c - rad} ${b} Q ${c} ${b} ${c} ${b + rad} L ${c} ${d - rad} Q ${c} ${d} ${c - rad} ${d} L ${a + rad} ${d} Q ${a} ${d} ${a} ${d - rad} L ${a} ${b + rad} Q ${a} ${b} ${a + rad} ${b} Z`;
 }
 
 function ell(cx: number, cy: number, rx: number, ry: number): string {
@@ -74,137 +90,130 @@ function ell(cx: number, cy: number, rx: number, ry: number): string {
 }
 
 export const PARTS: Record<PartId, PartDef> = {
-  back_panel: {
-    id: "back_panel",
-    path: rr(52, 60, 56, 110, 6),
-    pivotX: 80,
-    pivotY: 115,
-    fill: NAVY_DARK,
-  },
-  pelvis: {
-    id: "pelvis",
-    path: rr(60, 200, 40, 28, 4),
-    pivotX: 80,
-    pivotY: 214,
-    fill: NAVY,
-  },
-  lower_torso: {
-    id: "lower_torso",
-    path: rr(62, 158, 36, 42, 6),
-    pivotX: 80,
-    pivotY: 179,
-    fill: BLUE,
-  },
-  upper_torso: {
-    id: "upper_torso",
-    path: rr(58, 98, 44, 60, 8),
-    pivotX: 80,
-    pivotY: 128,
-    fill: NAVY,
-  },
-  neck: {
-    id: "neck",
-    path: rr(72, 72, 16, 26, 4),
-    pivotX: 80,
-    pivotY: 85,
-    fill: NAVY_DARK,
-  },
   head: {
     id: "head",
-    path: ell(80, 42, 32, 36),
-    pivotX: 80,
-    pivotY: 42,
+    path: ell(70, 38, 28, 32),
+    pivotX: 70,
+    pivotY: 38,
     fill: NAVY,
   },
   visor: {
     id: "visor",
-    path: rr(56, 32, 48, 14, 4),
-    pivotX: 80,
-    pivotY: 39,
-    fill: PURPLE,
+    path: rr(50, 28, 40, 12, 6),
+    pivotX: 70,
+    pivotY: 34,
+    fill: HIGHLIGHT,
+  },
+  neck: {
+    id: "neck",
+    path: rr(62, 68, 16, 20, 6),
+    pivotX: 70,
+    pivotY: 78,
+    fill: NAVY_DARK,
+  },
+  upper_torso: {
+    id: "upper_torso",
+    path: rr(52, 86, 36, 48, 10),
+    pivotX: 70,
+    pivotY: 110,
+    fill: BLUE,
+  },
+  lower_torso: {
+    id: "lower_torso",
+    path: rr(54, 132, 32, 40, 8),
+    pivotX: 70,
+    pivotY: 152,
+    fill: NAVY,
+  },
+  pelvis: {
+    id: "pelvis",
+    path: rr(56, 170, 28, 24, 6),
+    pivotX: 70,
+    pivotY: 182,
+    fill: NAVY_DARK,
   },
   left_upper_arm: {
     id: "left_upper_arm",
-    path: rr(36, 108, 14, 52, 6),
-    pivotX: 43,
-    pivotY: 134,
+    path: rr(28, 98, 12, 44, 6),
+    pivotX: 34,
+    pivotY: 120,
     fill: BLUE,
   },
   left_forearm: {
     id: "left_forearm",
-    path: rr(38, 158, 12, 48, 4),
-    pivotX: 44,
-    pivotY: 182,
+    path: rr(30, 140, 10, 40, 5),
+    pivotX: 35,
+    pivotY: 160,
     fill: NAVY,
   },
   left_hand: {
     id: "left_hand",
-    path: rr(36, 204, 16, 18, 4),
-    pivotX: 44,
-    pivotY: 213,
-    fill: PURPLE_LIGHT,
+    path: rr(28, 178, 14, 16, 6),
+    pivotX: 35,
+    pivotY: 186,
+    fill: ACCENT,
   },
   right_upper_arm: {
     id: "right_upper_arm",
-    path: rr(110, 108, 14, 52, 6),
-    pivotX: 117,
-    pivotY: 134,
+    path: rr(100, 98, 12, 44, 6),
+    pivotX: 106,
+    pivotY: 120,
     fill: BLUE,
   },
   right_forearm: {
     id: "right_forearm",
-    path: rr(110, 158, 12, 48, 4),
-    pivotX: 116,
-    pivotY: 182,
+    path: rr(100, 140, 10, 40, 5),
+    pivotX: 105,
+    pivotY: 160,
     fill: NAVY,
   },
   right_hand: {
     id: "right_hand",
-    path: rr(108, 204, 16, 18, 4),
-    pivotX: 116,
-    pivotY: 213,
-    fill: PURPLE_LIGHT,
+    path: rr(98, 178, 14, 16, 6),
+    pivotX: 105,
+    pivotY: 186,
+    fill: ACCENT,
   },
   left_thigh: {
     id: "left_thigh",
-    path: rr(66, 226, 12, 52, 6),
-    pivotX: 72,
-    pivotY: 252,
+    path: rr(58, 192, 10, 46, 6),
+    pivotX: 63,
+    pivotY: 215,
     fill: BLUE,
   },
   left_shin: {
     id: "left_shin",
-    path: rr(68, 276, 10, 48, 4),
-    pivotX: 72,
-    pivotY: 302,
+    path: rr(60, 236, 8, 44, 5),
+    pivotX: 63,
+    pivotY: 260,
     fill: NAVY,
   },
   left_foot: {
     id: "left_foot",
-    path: rr(62, 322, 20, 14, 3),
-    pivotX: 72,
-    pivotY: 332,
-    fill: PURPLE_LIGHT,
+    path: rr(54, 278, 18, 12, 4),
+    pivotX: 63,
+    pivotY: 286,
+    fill: PURPLE,
   },
   right_thigh: {
     id: "right_thigh",
-    path: rr(82, 226, 12, 52, 6),
-    pivotX: 88,
-    pivotY: 252,
+    path: rr(72, 192, 10, 46, 6),
+    pivotX: 77,
+    pivotY: 215,
     fill: BLUE,
   },
   right_shin: {
     id: "right_shin",
-    path: rr(82, 276, 10, 48, 4),
-    pivotX: 88,
-    pivotY: 302,
+    path: rr(72, 236, 8, 44, 5),
+    pivotX: 77,
+    pivotY: 260,
     fill: NAVY,
   },
   right_foot: {
     id: "right_foot",
-    path: rr(78, 322, 20, 14, 3),
-    pivotX: 88,
-    pivotY: 332,
-    fill: PURPLE_LIGHT,
+    path: rr(68, 278, 18, 12, 4),
+    pivotX: 77,
+    pivotY: 286,
+    fill: PURPLE,
   },
 };
