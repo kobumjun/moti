@@ -1,13 +1,12 @@
 "use client";
 
 /**
- * MascotRenderer - Leg-driven character with rigged MascotCharacter
- * Real walk cycle: contact, passing, push, settle. No body-bobbing.
- * Visual: rigged character for leg/arm animation. Uses file-2.svg styling via MascotCharacter.
+ * MascotRenderer - Uses FULL ORIGINAL file-2.svg as the only mascot visual.
+ * Motion engine drives wrapper transforms (breathing, facing, head tilt, walk rhythm).
+ * NO reconstructed character. NO fallback. ONLY file-2.svg.
  */
 
 import { useEffect, useState } from "react";
-import MascotCharacter from "./MascotCharacter";
 import { getWalkPose, getPoseForAction } from "./mascotPoses";
 import type { MotionVariation } from "./mascotState";
 import type { BaseAction } from "./mascotState";
@@ -58,22 +57,31 @@ export default function MascotRenderer({
 
   return (
     <div
-      className="relative w-full h-full"
+      className="relative w-full h-full flex items-end justify-center"
       style={{
         filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.12))",
       }}
     >
-      <MascotCharacter
-        leftLegRot={pose.leftLegRot}
-        rightLegRot={pose.rightLegRot}
-        leftArmRot={pose.leftArmRot}
-        rightArmRot={pose.rightArmRot}
-        torsoY={pose.torsoY}
-        headRot={pose.headRot}
-        breathScale={pose.breathScale}
-        capeRot={pose.capeRot}
-        facing={facing}
-      />
+      <div
+        className="relative w-full h-full flex items-end justify-center"
+        style={{
+          transform: [
+            `scaleX(${facing === "left" ? -1 : 1})`,
+            `translateY(${pose.torsoY}px)`,
+            `rotate(${pose.headRot}deg)`,
+            `rotate(${pose.capeRot}deg)`,
+            `scale(${pose.breathScale})`,
+          ].join(" "),
+          transformOrigin: "center bottom",
+        }}
+      >
+        <img
+          src="/mascot/file-2.svg"
+          alt=""
+          className="w-full h-full object-contain"
+          style={{ objectPosition: "center bottom" }}
+        />
+      </div>
     </div>
   );
 }
