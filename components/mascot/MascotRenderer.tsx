@@ -1,13 +1,12 @@
 "use client";
 
 /**
- * MascotRenderer - Transparent character with real walk cycle
- * NO bouncing, NO floating, NO box. Uses rigged MascotCharacter for
- * leg alternation, arm swing, torso rhythm during walk.
+ * MascotRenderer - Transparent character with motion engine.
+ * Visual source: file-2.svg ONLY. No fallback.
+ * Applies breathing, head tilt, facing, walk rhythm to the character.
  */
 
 import { useEffect, useState } from "react";
-import MascotCharacter from "./MascotCharacter";
 import type { MotionVariation } from "./mascotState";
 
 interface MascotRendererProps {
@@ -61,10 +60,6 @@ export default function MascotRenderer({
   const moodMod = mood === "excited" ? 1.15 : mood === "tired" ? 0.85 : 1;
   const amp = variation.stepAmplitude * moodMod;
 
-  let leftLegRot = 0;
-  let rightLegRot = 0;
-  let leftArmRot = 0;
-  let rightArmRot = 0;
   let torsoY = 0;
   let headRot = variation.headTilt * (variation.mirrored ? -1 : 1) * 0.5;
   let breathScale = 1;
@@ -72,10 +67,6 @@ export default function MascotRenderer({
 
   if (isWalking) {
     const p = getWalkPose(walkFrame, amp);
-    leftLegRot = p.leftLegRot;
-    rightLegRot = p.rightLegRot;
-    leftArmRot = p.leftArmRot;
-    rightArmRot = p.rightArmRot;
     torsoY = p.torsoY;
     headRot += p.headRot;
     capeRot = p.capeRot;
@@ -91,17 +82,28 @@ export default function MascotRenderer({
         filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.12))",
       }}
     >
-      <MascotCharacter
-        leftLegRot={leftLegRot}
-        rightLegRot={rightLegRot}
-        leftArmRot={leftArmRot}
-        rightArmRot={rightArmRot}
-        torsoY={torsoY}
-        headRot={headRot}
-        breathScale={breathScale}
-        capeRot={capeRot}
-        facing={facing}
-      />
+      <div
+        className="relative w-full h-full flex items-end justify-center"
+        style={{
+          transform: [
+            `scaleX(${facing === "left" ? -1 : 1})`,
+            `translateY(${torsoY}px)`,
+            `rotate(${headRot}deg)`,
+            `rotate(${capeRot}deg)`,
+            `scale(${breathScale})`,
+          ].join(" "),
+          transformOrigin: "center bottom",
+        }}
+      >
+        <img
+          src="/mascot/file-2.svg"
+          alt=""
+          className="w-full h-full object-contain"
+          style={{
+            objectPosition: "center bottom",
+          }}
+        />
+      </div>
     </div>
   );
 }
