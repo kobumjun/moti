@@ -2,12 +2,12 @@
 
 /**
  * MascotRenderer - Uses FULL ORIGINAL file-2.svg as the only mascot visual.
- * Motion engine drives wrapper transforms (breathing, facing, head tilt, walk rhythm).
+ * Motion engine drives wrapper transforms. NO vertical bounce. ONLY file-2.svg.
  * NO reconstructed character. NO fallback. ONLY file-2.svg.
  */
 
 import { useEffect, useState } from "react";
-import { getWalkPose, getPoseForAction } from "./mascotPoses";
+import { getWalkPose, getPoseForAction, type PoseValues } from "./mascotPoses";
 import type { MotionVariation } from "./mascotState";
 import type { BaseAction } from "./mascotState";
 
@@ -41,7 +41,7 @@ export default function MascotRenderer({
   const moodMod = mood === "excited" ? 1.15 : mood === "tired" ? 0.85 : 1;
   const amp = variation.stepAmplitude * moodMod;
 
-  let pose: { leftLegRot: number; rightLegRot: number; leftArmRot: number; rightArmRot: number; torsoY: number; headRot: number; breathScale: number; capeRot: number };
+  let pose: PoseValues;
 
   if (isWalking) {
     pose = getWalkPose(walkFrame, amp);
@@ -67,7 +67,7 @@ export default function MascotRenderer({
         style={{
           transform: [
             `scaleX(${facing === "left" ? -1 : 1})`,
-            `translateY(${pose.torsoY}px)`,
+            `translate(${pose.weightShiftX * (facing === "left" ? -1 : 1)}px, ${pose.torsoY}px)`,
             `rotate(${pose.headRot}deg)`,
             `rotate(${pose.capeRot}deg)`,
             `scale(${pose.breathScale})`,

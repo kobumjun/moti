@@ -1,6 +1,6 @@
 /**
- * mascotPoses - body transform values for each action
- * Drives the rigged MascotCharacter for leg/arm/torso/head
+ * mascotPoses - pose values for file-2.svg wrapper transforms
+ * NO vertical bounce. Grounded: head/cape rhythm, subtle weight shift (translateX).
  */
 
 import type { BaseAction } from "./mascotState";
@@ -11,25 +11,27 @@ export interface PoseValues {
   leftArmRot: number;
   rightArmRot: number;
   torsoY: number;
+  weightShiftX: number;
   headRot: number;
   breathScale: number;
   capeRot: number;
 }
 
-/** 8-phase walk cycle: contact, passing, push, settle (x2 for both legs) */
+/** 8-phase walk cycle - NO vertical bounce. Grounded stepping rhythm via head/cape only. */
 export function getWalkPose(frame: number, amp: number): PoseValues {
   const f = frame % 8;
   const step = 14 * amp;
   const armSwing = 20 * amp;
+  const wx = 1.2 * amp;
   const cycle = [
-    { leftLeg: step, rightLeg: -step, leftArm: -armSwing, rightArm: armSwing, torsoY: 0, head: -0.3, cape: -1.5 },
-    { leftLeg: step * 0.5, rightLeg: -step, leftArm: -armSwing * 0.5, rightArm: armSwing, torsoY: 1, head: 0, cape: 0 },
-    { leftLeg: -step * 0.3, rightLeg: -step * 0.5, leftArm: armSwing * 0.3, rightArm: armSwing * 0.5, torsoY: 1.5, head: 0.2, cape: 1 },
-    { leftLeg: -step, rightLeg: step * 0.3, leftArm: armSwing, rightArm: -armSwing * 0.3, torsoY: 0.5, head: 0, cape: 0 },
-    { leftLeg: -step, rightLeg: step, leftArm: armSwing, rightArm: -armSwing, torsoY: 0, head: 0.3, cape: 1.5 },
-    { leftLeg: -step * 0.5, rightLeg: step, leftArm: armSwing * 0.5, rightArm: -armSwing, torsoY: 1, head: 0, cape: 0 },
-    { leftLeg: step * 0.3, rightLeg: step * 0.5, leftArm: -armSwing * 0.3, rightArm: -armSwing * 0.5, torsoY: 1.5, head: -0.2, cape: -1 },
-    { leftLeg: step, rightLeg: -step * 0.3, leftArm: -armSwing, rightArm: armSwing * 0.3, torsoY: 0.5, head: 0, cape: 0 },
+    { leftLeg: step, rightLeg: -step, leftArm: -armSwing, rightArm: armSwing, torsoY: 0, weightX: -wx, head: -0.4, cape: -1.8 },
+    { leftLeg: step * 0.5, rightLeg: -step, leftArm: -armSwing * 0.5, rightArm: armSwing, torsoY: 0, weightX: 0, head: 0, cape: 0 },
+    { leftLeg: -step * 0.3, rightLeg: -step * 0.5, leftArm: armSwing * 0.3, rightArm: armSwing * 0.5, torsoY: 0, weightX: wx, head: 0.3, cape: 1.2 },
+    { leftLeg: -step, rightLeg: step * 0.3, leftArm: armSwing, rightArm: -armSwing * 0.3, torsoY: 0, weightX: 0, head: 0, cape: 0 },
+    { leftLeg: -step, rightLeg: step, leftArm: armSwing, rightArm: -armSwing, torsoY: 0, weightX: wx, head: 0.4, cape: 1.8 },
+    { leftLeg: -step * 0.5, rightLeg: step, leftArm: armSwing * 0.5, rightArm: -armSwing, torsoY: 0, weightX: 0, head: 0, cape: 0 },
+    { leftLeg: step * 0.3, rightLeg: step * 0.5, leftArm: -armSwing * 0.3, rightArm: -armSwing * 0.5, torsoY: 0, weightX: -wx, head: -0.3, cape: -1.2 },
+    { leftLeg: step, rightLeg: -step * 0.3, leftArm: -armSwing, rightArm: armSwing * 0.3, torsoY: 0, weightX: 0, head: 0, cape: 0 },
   ];
   const p = cycle[f]!;
   return {
@@ -37,7 +39,8 @@ export function getWalkPose(frame: number, amp: number): PoseValues {
     rightLegRot: p.rightLeg,
     leftArmRot: p.leftArm,
     rightArmRot: p.rightArm,
-    torsoY: p.torsoY,
+    torsoY: 0,
+    weightShiftX: p.weightX,
     headRot: p.head,
     breathScale: 1,
     capeRot: p.cape,
@@ -52,13 +55,14 @@ export function getPoseForAction(
 ): PoseValues {
   const m = variation.mirrored ? -1 : 1;
   const ht = variation.headTilt * m * 0.5;
-  const breath = 1 + Math.sin(phase) * 0.015 * variation.breathingStrength;
-  const cape = Math.sin(phase * 0.5) * 1.5 * variation.torsoSway;
+  const breath = 1 + Math.sin(phase) * 0.018 * variation.breathingStrength;
+  const cape = Math.sin(phase * 0.5) * 1.8 * variation.torsoSway;
+  const weightIdle = Math.sin(phase * 0.35) * 1.2 * variation.torsoSway;
   const arm = variation.armEmphasis;
 
   const poses: Record<BaseAction, Partial<PoseValues>> = {
-    idleBreathing: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -5, rightArmRot: 5, torsoY: 0, headRot: ht, breathScale: breath, capeRot: cape },
-    blink: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -5, rightArmRot: 5, torsoY: 0, headRot: ht, breathScale: breath, capeRot: cape },
+    idleBreathing: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -5, rightArmRot: 5, torsoY: 0, weightShiftX: weightIdle, headRot: ht, breathScale: breath, capeRot: cape },
+    blink: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -5, rightArmRot: 5, torsoY: 0, weightShiftX: weightIdle, headRot: ht, breathScale: breath, capeRot: cape },
     lookLeft: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -8, rightArmRot: 8, torsoY: 0, headRot: -6 + ht, breathScale: breath, capeRot: cape },
     lookRight: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -8, rightArmRot: 8, torsoY: 0, headRot: 6 + ht, breathScale: breath, capeRot: cape },
     lookUp: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -5, rightArmRot: 5, torsoY: 0, headRot: -4 + ht, breathScale: breath, capeRot: cape },
@@ -95,7 +99,7 @@ export function getPoseForAction(
     glanceAround: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -8, rightArmRot: 8, torsoY: 0, headRot: Math.sin(phase * 0.6) * 5 + ht, breathScale: breath, capeRot: cape },
     subtleReaction: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -15, rightArmRot: 15, torsoY: 0, headRot: 2 + ht, breathScale: breath, capeRot: cape },
     slightCrouch: { leftLegRot: 15, rightLegRot: 15, leftArmRot: -20, rightArmRot: 20, torsoY: 3, headRot: 1 + ht, breathScale: breath, capeRot: cape },
-    recoverNeutral: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -5, rightArmRot: 5, torsoY: 0, headRot: ht, breathScale: breath, capeRot: cape },
+    recoverNeutral: { leftLegRot: 0, rightLegRot: 0, leftArmRot: -5, rightArmRot: 5, torsoY: 0, weightShiftX: weightIdle, headRot: ht, breathScale: breath, capeRot: cape },
     capeAdjust: { leftLegRot: 0, rightLegRot: 0, leftArmRot: 25, rightArmRot: -30, torsoY: 0, headRot: -2 + ht, breathScale: breath, capeRot: Math.sin(phase) * 4 },
     talk: { leftLegRot: 0, rightLegRot: 0, leftArmRot: Math.sin(phase * 4) * 15, rightArmRot: Math.sin(phase * 4 + 0.3) * 15, torsoY: 0, headRot: ht, breathScale: breath, capeRot: cape },
     facepalm: { leftLegRot: 0, rightLegRot: 0, leftArmRot: 55, rightArmRot: -20, torsoY: 0, headRot: -2 + ht, breathScale: breath, capeRot: cape },
@@ -121,7 +125,8 @@ export function getPoseForAction(
     rightLegRot: base.rightLegRot ?? 0,
     leftArmRot: base.leftArmRot ?? -5,
     rightArmRot: base.rightArmRot ?? 5,
-    torsoY: base.torsoY ?? 0,
+    torsoY: 0,
+    weightShiftX: (base as { weightShiftX?: number }).weightShiftX ?? 0,
     headRot: base.headRot ?? ht,
     breathScale: base.breathScale ?? breath,
     capeRot: base.capeRot ?? cape,
