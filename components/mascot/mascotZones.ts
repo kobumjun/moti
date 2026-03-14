@@ -12,8 +12,8 @@ export type ZoneKey =
   | "logoutArea"
   | "center";
 
-export const MASCOT_WIDTH = 100;
-export const MASCOT_HEIGHT = 150;
+export const MASCOT_WIDTH = 160;
+export const MASCOT_HEIGHT = 220;
 export const SAFE_PADDING = 60;
 export const WALK_SPEED = 55;
 

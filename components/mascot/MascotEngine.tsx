@@ -18,8 +18,8 @@ import type { MotionVariation } from "./mascotState";
 import type { MascotMood } from "./mascotState";
 import MascotRenderer from "./MascotRenderer";
 
-const CHAR_WIDTH = 100;
-const CHAR_HEIGHT = 150;
+const CHAR_WIDTH = 160;
+const CHAR_HEIGHT = 220;
 const ARRIVAL_THRESHOLD = 8;
 const WALK_FRAME_MS = 80;
 const IDLE_DIALOGUE_MIN = 30000;

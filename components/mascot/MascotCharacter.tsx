@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * MascotCharacter - Rigged comic-style superhero for real walk cycle
+ * MascotCharacter - Rigged red-and-blue superhero for real walk cycle
  * Transparent, no box. Groups: cape, torso, head, arms, legs.
  * Transform-origins at joints for natural motion.
  */
@@ -47,12 +47,13 @@ export default function MascotCharacter({
     >
       <defs>
         <linearGradient id="body-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#60a5fa" />
-          <stop offset="100%" stopColor="#2563eb" />
+          <stop offset="0%" stopColor="#ef4444" />
+          <stop offset="50%" stopColor="#dc2626" />
+          <stop offset="100%" stopColor="#b91c1c" />
         </linearGradient>
         <linearGradient id="cape-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8b5cf6" />
-          <stop offset="100%" stopColor="#6d28d9" />
+          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#1d4ed8" />
         </linearGradient>
       </defs>
 
@@ -62,7 +63,7 @@ export default function MascotCharacter({
           <path
             d="M 22 42 Q 14 58 18 78 L 26 76 L 26 54 Z M 50 42 Q 58 58 54 78 L 46 76 L 46 54 Z"
             fill="url(#cape-grad)"
-            stroke="#5b21b6"
+            stroke="#1e40af"
             strokeWidth="0.8"
           />
         </g>
@@ -75,20 +76,20 @@ export default function MascotCharacter({
           <path
             d="M 28 32 Q 28 34 30 40 L 32 68 Q 34 76 36 78 Q 38 76 40 68 L 42 40 Q 44 34 44 32 Q 38 28 36 28 Q 34 28 28 32 Z"
             fill="url(#body-grad)"
-            stroke="#2563eb"
+            stroke="#b91c1c"
             strokeWidth="1.2"
           />
-          <rect x="26" y="70" width="20" height="6" rx="1" fill="#f59e0b" stroke="#d97706" strokeWidth="0.6" />
+          <rect x="26" y="70" width="20" height="6" rx="1" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.6" />
         </g>
 
         {/* Head - slight stabilization tilt */}
         <g transform={`rotate(${headRot * flip})`} style={{ transformOrigin: "36px 22px" }}>
           <ellipse cx="36" cy="22" rx="12" ry="14" fill="#fcd5b0" stroke="#e8a87c" strokeWidth="0.8" />
           <path
-            d="M 24 19 Q 36 13 48 19 L 48 25 Q 36 29 24 25 Z"
-            fill="#1e293b"
+            d="M 26 18 Q 36 14 46 18 L 46 23 Q 36 26 26 23 Z"
+            fill="#1e3a5f"
             stroke="#0f172a"
-            strokeWidth="0.6"
+            strokeWidth="0.5"
           />
           <ellipse cx="30" cy="22" rx="2" ry="2.5" fill="white" />
           <ellipse cx="42" cy="22" rx="2" ry="2.5" fill="white" />
@@ -100,7 +101,7 @@ export default function MascotCharacter({
         <g transform={`rotate(${leftArmRot * flip})`} style={{ transformOrigin: "26px 54px" }}>
           <path
             d="M 24 46 L 20 62"
-            stroke="#2563eb"
+            stroke="#dc2626"
             strokeWidth="5"
             strokeLinecap="round"
             fill="none"
@@ -112,7 +113,7 @@ export default function MascotCharacter({
         <g transform={`rotate(${rightArmRot * flip})`} style={{ transformOrigin: "46px 54px" }}>
           <path
             d="M 48 46 L 52 62"
-            stroke="#2563eb"
+            stroke="#dc2626"
             strokeWidth="5"
             strokeLinecap="round"
             fill="none"
@@ -124,8 +125,8 @@ export default function MascotCharacter({
         <g transform={`rotate(${leftLegRot * flip})`} style={{ transformOrigin: "30px 78px" }}>
           <path
             d="M 30 78 L 28 100 L 32 100 L 34 78 Z"
-            fill="#2563eb"
-            stroke="#1d4ed8"
+            fill="#dc2626"
+            stroke="#b91c1c"
             strokeWidth="0.8"
           />
           <path
@@ -140,8 +141,8 @@ export default function MascotCharacter({
         <g transform={`rotate(${rightLegRot * flip})`} style={{ transformOrigin: "42px 78px" }}>
           <path
             d="M 42 78 L 40 100 L 44 100 L 46 78 Z"
-            fill="#2563eb"
-            stroke="#1d4ed8"
+            fill="#dc2626"
+            stroke="#b91c1c"
             strokeWidth="0.8"
           />
           <path
